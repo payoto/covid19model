@@ -43,17 +43,13 @@ make_forecast_plot <- function(){
     forecast_long <- Nmax - N
     country <- countries[[i]]
     
-    predicted_cases <- colMeans(prediction[,1:N,i])
-    predicted_cases_li <- colQuantiles(prediction[,1:N,i], probs=.025)
-    predicted_cases_ui <- colQuantiles(prediction[,1:N,i], probs=.975)
+    predicted_cases <- colMeans(prediction[,1:Nmax,i])
+    predicted_cases_li <- colQuantiles(prediction[,1:Nmax,i], probs=.025)
+    predicted_cases_ui <- colQuantiles(prediction[,1:Nmax,i], probs=.975)
     
-    estimated_deaths <- colMeans(estimated.deaths[,1:N,i])
-    estimated_deaths_li <- colQuantiles(estimated.deaths[,1:N,i], probs=.025)
-    estimated_deaths_ui <- colQuantiles(estimated.deaths[,1:N,i], probs=.975)
-    
-    estimated_deaths_forecast <- colMeans(estimated.deaths[,1:Nmax,i])[N:Nmax]
-    estimated_deaths_li_forecast <- colQuantiles(estimated.deaths[,1:Nmax,i], probs=.025)[N:Nmax]
-    estimated_deaths_ui_forecast <- colQuantiles(estimated.deaths[,1:Nmax,i], probs=.975)[N:Nmax]
+    estimated_deaths <- colMeans(estimated.deaths[,1:Nmax,i])
+    estimated_deaths_li <- colQuantiles(estimated.deaths[,1:Nmax,i], probs=.025)
+    estimated_deaths_ui <- colQuantiles(estimated.deaths[,1:Nmax,i], probs=.975)
     
     rt <- colMeans(out$Rt_adj[,1:Nmax,i])
     rt_li <- colQuantiles(out$Rt_adj[,1:Nmax,i],probs=.025)
@@ -64,20 +60,20 @@ make_forecast_plot <- function(){
                                #"country_population" = rep(country_population, length(dates[[i]])),
                                "reported_cases" = reported_cases[[i]], 
                                "reported_cases_c" = cumsum(reported_cases[[i]]), 
-                               "predicted_cases_c" = cumsum(predicted_cases),
-                               "predicted_min_c" = cumsum(predicted_cases_li),
-                               "predicted_max_c" = cumsum(predicted_cases_ui),
-                               "predicted_cases" = predicted_cases,
-                               "predicted_min" = predicted_cases_li,
-                               "predicted_max" = predicted_cases_ui,
+                               "predicted_cases_c" = cumsum(predicted_cases)[1:N],
+                               "predicted_min_c" = cumsum(predicted_cases_li)[1:N],
+                               "predicted_max_c" = cumsum(predicted_cases_ui)[1:N],
+                               "predicted_cases" = predicted_cases[1:N],
+                               "predicted_min" = predicted_cases_li[1:N],
+                               "predicted_max" = predicted_cases_ui[1:N],
                                "deaths" = deaths_by_country[[i]],
                                "deaths_c" = cumsum(deaths_by_country[[i]]),
-                               "estimated_deaths_c" =  cumsum(estimated_deaths),
-                               "death_min_c" = cumsum(estimated_deaths_li),
-                               "death_max_c"= cumsum(estimated_deaths_ui),
-                               "estimated_deaths" = estimated_deaths,
-                               "death_min" = estimated_deaths_li,
-                               "death_max"= estimated_deaths_ui,
+                               "estimated_deaths_c" =  cumsum(estimated_deaths[1:N]),
+                               "death_min_c" = cumsum(estimated_deaths_li[1:N]),
+                               "death_max_c"= cumsum(estimated_deaths_ui[1:N]),
+                               "estimated_deaths" = estimated_deaths[1:N],
+                               "death_min" = estimated_deaths_li[1:N],
+                               "death_max"= estimated_deaths_ui[1:N],
                                "rt" = rt[1:N],
                                "rt_min" = rt_li[1:N],
                                "rt_max" = rt_ui[1:N])
@@ -86,19 +82,28 @@ make_forecast_plot <- function(){
     times_forecast <- times[length(times)] + 0:forecast_long
     data_country_forecast <- data.frame("time" = times_forecast,
                                         "country" = rep(country, forecast_long+1),
-                                        "estimated_deaths_forecast" = estimated_deaths_forecast,
-                                        "estimated_deaths_forecast_min" = estimated_deaths_li_forecast,
-                                        "estimated_deaths_forecast_max"= estimated_deaths_ui_forecast,
+                                        "estimated_deaths_forecast" = estimated_deaths[N:Nmax],
+                                        "estimated_deaths_forecast_min" = estimated_deaths_li[N:Nmax],
+                                        "estimated_deaths_forecast_max"= estimated_deaths_ui[N:Nmax],
+                                        "estimated_deaths_forecast_c" =  cumsum(estimated_deaths)[N:Nmax],
+                                        "estimated_deaths_forecast_min_c" = cumsum(estimated_deaths_li)[N:Nmax],
+                                        "estimated_deaths_forecast_max_c"= cumsum(estimated_deaths_ui)[N:Nmax],
+                                        "estimated_cases_forecast_c" = cumsum(predicted_cases)[N:Nmax],
+                                        "estimated_cases_forecast_min_c" = cumsum(predicted_cases_li)[N:Nmax],
+                                        "estimated_cases_forecast_max_c" = cumsum(predicted_cases_ui)[N:Nmax],
+                                        "estimated_cases_forecast" = predicted_cases[N:Nmax],
+                                        "estimated_cases_forecast_min" = predicted_cases_li[N:Nmax],
+                                        "estimated_cases_forecast_max" = predicted_cases_ui[N:Nmax],
                                         "rt" = rt[N:Nmax],
                                         "rt_min" = rt_li[N:Nmax],
                                         "rt_max" = rt_ui[N:Nmax])
 
     all_data <- rbind(all_data, data_country)
     all_forecast_data <- rbind(all_forecast_data, data_country_forecast)
-    make_single_plot(data_country = data_country, 
-                     data_country_forecast = data_country_forecast[1:N2,],
-                     filename = filename,
-                     country = country)
+    # make_single_plot(data_country = data_country, 
+    #                  data_country_forecast = data_country_forecast[1:N2,],
+    #                  filename = filename,
+    #                  country = country)
   }
   write.csv(all_forecast_data, paste0("results/", filename, "forecast-data.csv"))
   write.csv(all_data, paste0("results/", filename, "all-forecast-data.csv"))
