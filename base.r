@@ -8,9 +8,6 @@ library(EnvStats)
 
 # provide functions for pre and post processing
 source("utils/arg-parser.r")
-source("utils/read-covariates.r")
-
-
 source('utils/read-data.r')
 source('utils/process-covariates.r')
 
