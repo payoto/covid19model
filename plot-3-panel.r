@@ -32,11 +32,13 @@ make_three_pannel_plot <- function(){
   prediction = out$prediction
   estimated.deaths = out$E_deaths
   
-  if(!exists("interventions", inherits=FALSE)){
+  if(!exists("interventions", inherits=FALSE)){ # provided for backward compatibility
+    message("`interventions` did not exist using `covariates` (backward compatibility to v1 and v2)")
     interventions <- covariates
   }
   if (!exists("region_to_country_map", inherits = FALSE)){
-    print("region_to_country_map did not exist creating it")
+    message("region_to_country_map did not exist, creating it.")
+    region_to_country_map = c()
     for(country in countries){
       region_to_country_map[[country]] <- country
     }
@@ -128,7 +130,7 @@ make_three_pannel_plot <- function(){
                                       "deaths", "deaths_c", "estimated_deaths_c", "death_min_c",  "death_max_c","estimated_deaths",
                                       "death_min", "death_max","rt", "rt_min","rt_max")
     data_country_out_temp <- data_country[,colnames_csv]
-    colnames(data_country_out_temp) <- c("time","country", "reported_cases", "reported_cases_cumulative",  "predicted_infections_mean_cumulative", 
+    colnames(data_country_out_temp) <- c("time", "country", "reported_cases", "reported_cases_cumulative",  "predicted_infections_mean_cumulative", 
                                     "predicted_infections_lower_CI_95_cumulative","predicted_infections_higher_CI_95_cumulative", 
                                     "predicted_infections_mean","predicted_infections_lower_CI_95", "predicted_infections_higher_CI_95_cumulative",
                                     "reported_deaths", "reported_deaths_cumulative", "estimated_deaths_mean_cumulative", 

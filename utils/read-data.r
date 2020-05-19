@@ -8,7 +8,7 @@ source("utils/arg-parser.r")
 read_obs_data <- function(countries, file_list=c('data/COVID-19-up-to-date.rds'), max_date=""){
   # Read the deaths and cases data
   d <- trim_data_to_date_range(
-    do.call('rbind', lapply(data_files, readRDS)),
+    do.call('rbind', lapply(file_list, readRDS)),
     max_date  # optional arguments allow data customisation
   )
   colnames(d)[colnames(d) == "Countries.and.territories"] <- "Country"

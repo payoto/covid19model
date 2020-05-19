@@ -9,7 +9,10 @@ library(EnvStats)
 # provide functions for pre and post processing
 source("utils/arg-parser.r")
 source('utils/read-data.r')
+source('utils/read-interventions.r')
 source('utils/process-covariates.r')
+
+VERSION="v3"
 
 # Commandline options and parsing
 parsedargs <- base_arg_parse()
@@ -25,7 +28,7 @@ d <- read_obs_data(countries)
 ifr.by.country <- read_ifr_data()
 
 # Read interventions
-interventions <- read_interventions(countries)
+interventions <- read_interventions('data/interventions.csv')
 
 N2 <- 100 # increase if you need more forecast
 
@@ -60,7 +63,8 @@ print(sprintf("Jobid = %s",JOBID))
 
 countries <- countries$Regions
 save.image(paste0('results/',StanModel,'-',JOBID,'.Rdata'))
-save(fit,prediction,dates,reported_cases,deaths_by_country,countries,estimated.deaths,estimated.deaths.cf,out,file=paste0('results/',StanModel,'-',JOBID,'-stanfit.Rdata'))
+save(fit, prediction, dates,reported_cases,deaths_by_country,countries, estimated.deaths, estimated.deaths.cf, 
+  out,interventions, VERSION,file=paste0('results/',StanModel,'-',JOBID,'-stanfit.Rdata'))
 
 ## Ensure that output directories exist
 dir.create("results/", showWarnings = FALSE, recursive = TRUE)
