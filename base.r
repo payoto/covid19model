@@ -48,17 +48,6 @@ mobility <- read_mobility(mobility_source)
 # Read interventions
 interventions <- read_interventions('data/interventions.csv')
 
-
-# Table 1 and top 7
-regions_sum <- d %>% group_by(country) %>% summarise(Deaths=sum(Deaths)) %>%
-  inner_join(ifr.by.country) %>% mutate(deathsPer1000=Deaths/popt) %>% 
-  arrange(desc(deathsPer1000))
-regions_sum <- regions_sum[,-which(colnames(regions_sum) %in% c("X"))]
-regions_sum$ifr<-signif(regions_sum$ifr*100,2)
-regions_sum$deathsPer1000 <- signif(regions_sum$deathsPer1000*1000,2)
-
-top_7 <- regions_sum[1:7,]
-
 forecast <- 7 # increase to get correct number of days to simulate
 # Maximum number of days to simulate
 N2 <- (max(d$DateRep) - min(d$DateRep) + 1 + forecast)[[1]]
