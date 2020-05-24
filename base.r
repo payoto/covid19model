@@ -54,8 +54,16 @@ N2 <- (max(d$DateRep) - min(d$DateRep) + 1 + forecast)[[1]]
 
 formula = as.formula(formula_pooling)
 formula_partial = as.formula(formula_partialpooling)
-processed_data <- process_covariates(regions = regions, mobility = mobility, intervention = interventions, 
-                                     d = d , ifr.by.country = ifr.by.country, N2 = N2, formula = formula, formula_partial = formula_partial)
+processed_data <- process_covariates(
+  regions = regions,
+  mobility = mobility,
+  intervention = interventions,
+  d = d,
+  ifr.by.country = ifr.by.country,
+  N2 = N2,
+  formula = formula,
+  formula_partial = formula_partial
+)
 
 stan_data <- processed_data$stan_data
 dates <- processed_data$dates

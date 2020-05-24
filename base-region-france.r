@@ -68,11 +68,24 @@ ifr.by.country <- return_ifr()
 interventions <- read_interventions('data/interventions.csv', max_date)
 mobility <- read_mobility(mobility_source)
 
-
-
+# Modelling + Forecasting range needs serious revamp
+forecast <- 21
 N2 = 120
-processed_data <- process_covariates_region(region_to_country_map, 
-  interventions, d, ifr.by.country, N2)
+# N2 <- (max(d$DateRep) - min(d$DateRep) + 1 + forecast)[[1]]
+
+
+formula = as.formula(formula_pooling)
+formula_partial = as.formula(formula_partialpooling)
+processed_data <- process_covariates_regions(
+  regions = regions,
+  mobility = mobility,
+  intervention = interventions,
+  d = d,
+  ifr.by.country = ifr.by.country,
+  N2 = N2,
+  formula = formula,
+  formula_partial = formula_partial
+)
 
 stan_data = processed_data$stan_data
 dates = processed_data$dates
