@@ -9,8 +9,17 @@ library(scales)
 library(stringr)
 library(abind)
 
-process_covariates <- function(regions, mobility, intervention, d, ifr.by.country, N2, formula, formula_partial){
-  intervention$Country <- factor(intervention$Country)
+process_covariates <- function(
+  regions,
+  mobility,
+  interventions,
+  d,
+  ifr.by.country,
+  N2,
+  formula,
+  formula_partial
+){
+  interventions$Country <- factor(interventions$Country)
   
   serial.interval = read.csv("data/serial_interval.csv")
   # Pads serial interval with 0 if N2 is greater than the length of the serial
@@ -36,7 +45,7 @@ process_covariates <- function(regions, mobility, intervention, d, ifr.by.countr
                     N0=6,cases=NULL,SI=serial.interval$fit[1:N2],
                     EpidemicStart = NULL, pop = NULL)
   deaths_by_country <- list()
-  intervention_length <- length(colnames(intervention))
+  intervention_length <- length(colnames(interventions))
   mobility_length <- length(colnames(mobility))
   
   covariate_list <- list()
