@@ -36,6 +36,10 @@ make_three_pannel_plot <- function(){
     message("`interventions` did not exist using `covariates` (backward compatibility to v1 and v2)")
     interventions <- covariates
   }
+  if(!exists("reported_deaths", inherits=FALSE)){ # provided for backward compatibility
+    message("`reported_deaths` did not exist using `deaths_by_country` (backward compatibility up to v3)")
+    reported_deaths <- deaths_by_country
+  }
   if (!exists("region_to_country_map", inherits = FALSE)){
     message("region_to_country_map did not exist, creating it.")
     region_to_country_map = c()
@@ -109,8 +113,8 @@ make_three_pannel_plot <- function(){
                                "predicted_max" = predicted_cases_ui,
                                "predicted_min2" = predicted_cases_li2,
                                "predicted_max2" = predicted_cases_ui2,
-                               "deaths" = deaths_by_country[[i]],
-                               "deaths_c" = cumsum(deaths_by_country[[i]]),
+                               "deaths" = reported_deaths[[i]],
+                               "deaths_c" = cumsum(reported_deaths[[i]]),
                                "estimated_deaths_c" =  cumsum(estimated_deaths),
                                "death_min_c" = cumsum(estimated_deaths_li),
                                "death_max_c"= cumsum(estimated_deaths_ui),

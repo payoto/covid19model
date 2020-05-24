@@ -28,7 +28,10 @@ make_forecast_plot <- function(){
   out = rstan::extract(fit)
   prediction = out$prediction
   estimated.deaths = out$E_deaths
-
+  if(!exists("reported_deaths", inherits=FALSE)){ # provided for backward compatibility
+    message("`reported_deaths` did not exist using `deaths_by_country` (backward compatibility up to v3)")
+    reported_deaths <- deaths_by_country
+  }
   # Calculate the longest possible forecast for the given data
   Nmax = dim(out$Rt_adj)[2]
   max_forecast = Nmax - max(unlist(lapply(dates, length)))
