@@ -14,7 +14,6 @@ library(ggrepel)
 library(gtable)
 library(zoo)
 
-source('Italy/code/utils/read-data-subnational.r')
 # provide functions for pre and post processing
 source("utils/arg-parser.r")
 source('utils/read-data.r')
@@ -29,6 +28,7 @@ parsedargs <- base_arg_parse()
 DEBUG <- parsedargs[["DEBUG"]]
 FULL_RUN <- parsedargs[["FULL"]]
 StanModel <- parsedargs[["StanModel"]]
+mobility_source <- parsedargs[["mobility_source"]]
 formula_pooling <- parsedargs[["formula_pooling"]]
 formula_partialpooling <- parsedargs[["formula_partialpooling"]]
 
@@ -43,8 +43,7 @@ regions <- countries
 ifr.by.country <- read_ifr_data()
 
 # Read google mobility, apple mobility, interventions, stringency
-google_mobility <- read_google_mobility("Italy")
-mobility<-google_mobility[which(google_mobility$country!="Italy"),]
+mobility <- read_mobility(mobility_source)
 
 # Read interventions
 interventions <- read_interventions('data/interventions.csv')

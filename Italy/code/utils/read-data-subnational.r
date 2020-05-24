@@ -5,7 +5,7 @@ library(tidyverse)
 library(dplyr)
 library(magrittr)
 
-read_obs_data <- function(){
+read_obs_data_italy <- function(){
   # Read the deaths and cases data
   d <- read.csv("Italy/data/dpc-covid19-ita-regioni.csv")
 
@@ -110,11 +110,12 @@ read_google_mobility <- function(Country){
   colnames(google_mobility)[which(colnames(google_mobility)=="workplaces_percent_change_from_baseline")]<-"workplace"
   colnames(google_mobility)[which(colnames(google_mobility)=="residential_percent_change_from_baseline")]<-"residential"
   colnames(google_mobility)[which(colnames(google_mobility)=="retail_and_recreation_percent_change_from_baseline")]<-"retail.recreation"
-  google_mobility$country[which(google_mobility$country =="")]<-"Italy"
+  google_mobility$country[which(google_mobility$country =="")]<-Country
   
   mobility <- google_mobility
   nametrans <- read.csv("Italy/data/province_name_translation.csv")
-  Italy<-data.frame(denominazione_regione="Italy",google_county="Italy",county="Italy")
+  # add Italy row to translation layer
+  Italy<-data.frame(denominazione_regione=Country,google_county=Country,county=Country)
   nametrans<-bind_rows(nametrans,Italy)
   mobility$country<-as.factor(mobility$country)
   nametrans$google_county<-as.factor(nametrans$google_county)
@@ -129,7 +130,7 @@ read_google_mobility <- function(Country){
   colnames(nametrans)[which(colnames(nametrans)=="denominazione_regione")]<-"country"
   nametrans$country<-as.factor(nametrans$country)
   nametrans$country<-str_replace_all(nametrans$country, " ", "_")
-  mobility <- mobility %>% filter(country !="Italy")
+  mobility <- mobility %>% filter(country !=Country)
   mobility <- inner_join(mobility,nametrans,by.x="country",by.y="country") # fix names of regions
   mobility <- mobility[,-which(colnames(mobility) %in% c("country","google_county"))]
   colnames(mobility)[which(colnames(mobility)=="county")] <- "country"

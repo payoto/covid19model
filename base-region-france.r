@@ -22,6 +22,7 @@ FULL <- parsedargs[["FULL"]]
 StanModel <- parsedargs[["StanModel"]]
 new_sub_folder <- parsedargs[["new_sub_folder"]]
 max_date <- parsedargs[["max_date"]]
+mobility_source <- parsedargs[["mobility_source"]]
 formula_pooling <- parsedargs[["formula_pooling"]]
 formula_partialpooling <- parsedargs[["formula_partialpooling"]]
 
@@ -65,6 +66,9 @@ countries <- names(region_to_country_map)
 ## get IFR and population from same file
 ifr.by.country <- return_ifr()
 interventions <- read_interventions('data/interventions.csv', max_date)
+mobility <- read_mobility(mobility_source)
+
+
 
 N2 = 120
 processed_data <- process_covariates_region(region_to_country_map, 
