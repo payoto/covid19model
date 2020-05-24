@@ -12,9 +12,11 @@ base_arg_parse <- function (){
 	                     help="Do not create subdirectories for generated data.")
 	parser <- add_option(parser, c("--maxdate"), default="",
 	                     help="Consider only data up to max date 'dd/mm/yy' format.")
-	parser <- add_option(parser, c("--activeregions"), default="active-regions.cfg",
+	parser <- add_option(parser, c("--activezones"), default="config/covid19model_analysis_zones.csv",
+	                     help="Parameter containing the active countries.")
+	parser <- add_option(parser, c("--activeregions"), default="config/active-regions.cfg",
 	                     help="Parameter containing the active regions.")
-	parser <- add_option(parser, c("--activecountries"), default="active-countries.cfg",
+	parser <- add_option(parser, c("--activecountries"), default="config/active-countries.cfg",
 	                     help="Parameter containing the active countries.")
 	
 	cmdoptions <- parse_args(parser, args = commandArgs(trailingOnly = TRUE), positional_arguments = TRUE)
@@ -60,6 +62,7 @@ base_arg_parse <- function (){
 			max_date = cmdoptions$options$maxdate,
 			activeregions = cmdoptions$options$activeregions,
 			activecountries = cmdoptions$options$activecountries,
+			activezones = cmdoptions$options$activezones,
             std_args
 		)
     message("Configured values are:")

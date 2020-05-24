@@ -31,7 +31,7 @@ read_ifr_data <- function(){
 
 translate_region_names <- function(
   data,
-  translation_file="data/covid19model_zones_prepared.csv",
+  translation_file="config/covid19model_analysis_zones.csv",
   data_name_field="country",
   model_name_field = "covid19model_region",  # the column in the translation csv with the target names
   mobility_name_field = "GCMR_region"  # the column in the translation csv with the source names
@@ -101,7 +101,7 @@ read_google_mobility <- function(Country="Italy"){
   return (google_mobility)
 }
 
-read_mobility <- function(mobility_source='google', selection_file="data/covid19model_zones_prepared.csv"){
+read_mobility <- function(mobility_source='google', selection_file="config/covid19model_analysis_zones.csv"){
   if(mobility_source == 'google'){
     mobility = read_google_mobility()
   } else {
@@ -120,4 +120,21 @@ read_mobility <- function(mobility_source='google', selection_file="data/covid19
     "workplace"
   ) 
   return(mobility)
+}
+
+
+read_country_region_map <- function (parsedargs){
+
+  regions <- read_country_file(parsedargs[["activeregions"]])
+  active_countries <- read_country_file(parsedargs[["activecountries"]])
+  region_to_country_map = list()
+  for(Region in regions){
+    region_to_country_map[[Region]] <- "France"
+  }
+  for(Country in active_countries){
+    region_to_country_map[[Country]] <- Country
+  }
+
+  active_zones <- parsedargs[["activezones"]]
+  return(region_to_country_map)
 }

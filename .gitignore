@@ -79,7 +79,7 @@ Brazil/figures/*.pdf
 Brazil/figures/*.txt
 Brazil/results/*.RDS
 
-
+data/Global_Mobility_Report.csv
 
 # Python
 # Byte-compiled / optimized / DLL files

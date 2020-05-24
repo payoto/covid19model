@@ -26,18 +26,9 @@ mobility_source <- parsedargs[["mobility_source"]]
 formula_pooling <- parsedargs[["formula_pooling"]]
 formula_partialpooling <- parsedargs[["formula_partialpooling"]]
 
-regions <- read_country_file(parsedargs[["activeregions"]])
-active_countries <- read_country_file(parsedargs[["activecountries"]])
-
 run_name <- create_analysis_folder(FULL, DEBUG, StanModel)
 
-region_to_country_map = list()
-for(Region in regions){
-  region_to_country_map[[Region]] <- "France"
-}
-for(Country in active_countries){
-  region_to_country_map[[Country]] <- Country
-}
+region_to_country_map <- read_country_region_map(parsedargs)
 
 ## Reading data from region file and world data and trimming it to max_date
 data_files <- c(
