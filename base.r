@@ -29,30 +29,9 @@ parsedargs <- base_arg_parse()
 DEBUG <- parsedargs[["DEBUG"]]
 FULL_RUN <- parsedargs[["FULL"]]
 StanModel <- parsedargs[["StanModel"]]
-if(length(cmdoptions$args) == 0) {
-  StanModel = 'base-italy'
-} else {
-  StanModel = cmdoptions$args[1]
-}
+formula_pooling <- parsedargs[["formula_pooling"]]
+formula_partialpooling <- parsedargs[["formula_partialpooling"]]
 
-args = cmdoptions$args
-# if using rstudio change this, 1: stan-file, 2: mobility data to use, 3:interventions to use
-# 4:formula to use for full pool, 5:formula for partial pool
-# debug and full are either commandline or sys variable
-# these are the intervention names
-#"schools_universities" "public_events""lockdown" "social_distancing_encouraged" "self_isolating_if_ill"  
-# these are the mobility names
-# "grocery"  "parks"  "residential"  "retail" "transit"   "workplace"  "averageMobility"
-if(length(args) == 0) {
-  args = c('base-italy', 'google', 'interventions',
-           '~ -1 + residential + transit + averageMobility',
-           '~ -1 + residential + transit + averageMobility'
-  ) 
-} 
-
-StanModel = args[1]
-cat(sprintf("Running:\nStanModel = %s\nMobility = %s\nInterventions = %s\nFixed effects:%s\nRandom effects:%s\nDebug: %s\n",
-            StanModel,args[2],args[3], args[4],args[5], DEBUG))
 
 # Read which countires to use
 countries <- read.csv('data/regions.csv', stringsAsFactors = FALSE)
@@ -85,8 +64,8 @@ forecast <- 7 # increase to get correct number of days to simulate
 # Maximum number of days to simulate
 N2 <- (max(d$DateRep) - min(d$DateRep) + 1 + forecast)[[1]]
 
-formula = as.formula(args[4])
-formula_partial = as.formula(args[5])
+formula = as.formula(formula_pooling)
+formula_partial = as.formula(formula_partialpooling)
 processed_data <- process_covariates(regions = regions, mobility = mobility, intervention = interventions, 
                                      d = d , ifr.by.country = ifr.by.country, N2 = N2, formula = formula, formula_partial = formula_partial)
 

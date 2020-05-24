@@ -42,28 +42,32 @@ base_arg_parse <- function (){
 	  stop("Setting both debug and full run modes at once is invalid")
 	}
 
-	if(length(cmdoptions$args) == 0) {
-	  StanModel = 'base'
-	} else {
-	  StanModel = cmdoptions$args[1]
-	}
-	 
-	print(sprintf("Running %s",StanModel))
-	if(DEBUG) {
-	  print("Running in DEBUG mode")
-	} else if (FULL) {
-	  print("Running in FULL mode")
-	}
+    std_args <- c( # Default ordered arguments
+        StanModel = 'base-italy',
+        mobility_source = 'google',
+        intervention_source = 'interventions',
+        formula_pooling = '~ -1 + residential + transit + averageMobility',
+        formula_partialpooling = '~ -1 + residential + transit + averageMobility'
+    )
+    for (i in 1:length(cmdoptions$args)){ # overwerite defaults
+        std_args[i] = cmdoptions$args[i]
+    }	 
 
 	parsedargs <- c(
 			DEBUG=DEBUG,
 			FULL=FULL,
-			StanModel=StanModel,
 			new_sub_folder=new_sub_folder ,
 			max_date = cmdoptions$options$maxdate,
 			activeregions = cmdoptions$options$activeregions,
-			activecountries = cmdoptions$options$activecountries
+			activecountries = cmdoptions$options$activecountries,
+            std_args
 		)
+    message("Configured values are:")
+    for (i in 1:length(parsedargs)){
+        message(sprintf("\t%s : %s",names(parsedargs)[i], parsedargs[i]))
+    }
+    # print(names(parsedargs))
+    # print(parsedargs)
 	return(parsedargs)
 }
 
@@ -88,4 +92,29 @@ trim_data_to_date_range <- function (data, max_date, date_field="DateRep",
 				<= as.Date(max_date, format=format_max),
 			])
 	}
+}
+
+create_analysis_folder <- function(FULL, DEBUG, StanModel){
+    JOBID = Sys.getenv("PBS_JOBID")
+    if(JOBID == "")
+      JOBID = as.character(abs(round(rnorm(1) * 1000000)))
+    print(sprintf("Jobid = %s",JOBID))
+    fullstr <- ""
+    if (FULL){
+      fullstr <- "fullrun"
+    } else if (DEBUG) {
+      fullstr <- "debug"
+    }
+
+    run_name <- paste0(StanModel,'-',fullstr,'-', format(Sys.time(), '%Y%m%dT%H%M%S'),'-',JOBID)
+    if (new_sub_folder){
+      result_folders <- c(
+          "results", "figures"
+        )
+      for (fold in result_folders){
+        dir.create(paste0(fold ,'/', run_name))
+      }
+      run_name <- paste0(run_name ,'/', run_name)
+    }
+    return(run_name)
 }

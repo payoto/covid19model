@@ -13,7 +13,7 @@ source("utils/process-covariates-region.r")
 source("utils/ifr-tools.r")
 source("utils/log-and-process.r")
 
-VERSION="v3"
+VERSION="v5"
 
 # Commandline options and parsing
 parsedargs <- base_arg_parse()
@@ -22,9 +22,13 @@ FULL <- parsedargs[["FULL"]]
 StanModel <- parsedargs[["StanModel"]]
 new_sub_folder <- parsedargs[["new_sub_folder"]]
 max_date <- parsedargs[["max_date"]]
+formula_pooling <- parsedargs[["formula_pooling"]]
+formula_partialpooling <- parsedargs[["formula_partialpooling"]]
 
 regions <- read_country_file(parsedargs[["activeregions"]])
 active_countries <- read_country_file(parsedargs[["activecountries"]])
+
+run_name <- create_analysis_folder(FULL, DEBUG, StanModel)
 
 region_to_country_map = list()
 for(Region in regions){
@@ -34,27 +38,6 @@ for(Country in active_countries){
   region_to_country_map[[Country]] <- Country
 }
 
-JOBID = Sys.getenv("PBS_JOBID")
-if(JOBID == "")
-  JOBID = as.character(abs(round(rnorm(1) * 1000000)))
-print(sprintf("Jobid = %s",JOBID))
-fullstr <- ""
-if (FULL){
-  fullstr <- "fullrun"
-} else if (DEBUG) {
-  fullstr <- "debug"
-}
-
-run_name <- paste0(StanModel,'-',fullstr,'-', format(Sys.time(), '%Y%m%dT%H%M%S'),'-',JOBID)
-if (new_sub_folder){
-  result_folders <- c(
-      "results", "figures"
-    )
-  for (fold in result_folders){
-    dir.create(paste0(fold ,'/', run_name))
-  }
-  run_name <- paste0(run_name ,'/', run_name)
-}
 ## Reading data from region file and world data and trimming it to max_date
 data_files <- c(
   "data/COVID-19-up-to-date.rds",
