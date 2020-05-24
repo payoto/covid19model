@@ -25,10 +25,11 @@ max_date <- parsedargs[["max_date"]]
 mobility_source <- parsedargs[["mobility_source"]]
 formula_pooling <- parsedargs[["formula_pooling"]]
 formula_partialpooling <- parsedargs[["formula_partialpooling"]]
+zone_definition_file <- parsedargs[["activezones"]]
 
 run_name <- create_analysis_folder(FULL, DEBUG, StanModel)
 
-region_to_country_map <- read_country_region_map(parsedargs)
+region_to_country_map <- read_country_region_map(zone_definition_file)
 
 ## Reading data from region file and world data and trimming it to max_date
 data_files <- c(
@@ -57,7 +58,7 @@ countries <- names(region_to_country_map)
 ## get IFR and population from same file
 ifr.by.country <- return_ifr()
 interventions <- read_interventions('data/interventions.csv', max_date)
-mobility <- read_mobility(mobility_source)
+mobility <- read_mobility(mobility_source, zone_definition_file)
 
 # Modelling + Forecasting range needs serious revamp
 forecast <- 21

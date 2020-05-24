@@ -101,7 +101,10 @@ read_google_mobility <- function(Country="Italy"){
   return (google_mobility)
 }
 
-read_mobility <- function(mobility_source='google', selection_file="config/covid19model_analysis_zones.csv"){
+read_mobility <- function(
+  mobility_source='google', 
+  selection_file="config/covid19model_analysis_zones.csv"
+){
   if(mobility_source == 'google'){
     mobility = read_google_mobility()
   } else {
@@ -123,18 +126,13 @@ read_mobility <- function(mobility_source='google', selection_file="config/covid
 }
 
 
-read_country_region_map <- function (parsedargs){
+read_country_region_map <- function (zone_definition_file){
+  analysis_zones <- read.csv(zone_definition_file)
 
-  regions <- read_country_file(parsedargs[["activeregions"]])
-  active_countries <- read_country_file(parsedargs[["activecountries"]])
   region_to_country_map = list()
-  for(Region in regions){
-    region_to_country_map[[Region]] <- "France"
-  }
-  for(Country in active_countries){
-    region_to_country_map[[Country]] <- Country
+  for(i in 1:length(analysis_zones$covid19model_region)){
+    region_to_country_map[[analysis_zones$covid19model_region[i]]] <- analysis_zones$covid19model_country[i]
   }
 
-  active_zones <- parsedargs[["activezones"]]
   return(region_to_country_map)
 }
