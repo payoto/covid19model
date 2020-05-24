@@ -77,9 +77,9 @@ N2 = 120
 formula = as.formula(formula_pooling)
 formula_partial = as.formula(formula_partialpooling)
 processed_data <- process_covariates_regions(
-  regions = regions,
+  region_to_country_map = region_to_country_map,
   mobility = mobility,
-  intervention = interventions,
+  interventions = interventions,
   d = d,
   ifr.by.country = ifr.by.country,
   N2 = N2,
@@ -96,7 +96,7 @@ onset_to_death = processed_data$onset_to_death
 
 log_simulation_inputs(run_name, region_to_country_map,  ifr.by.country,
     infection_to_onset, onset_to_death, VERSION)
-
+stop()
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 m = stan_model(paste0('stan-models/',StanModel,'.stan'))
