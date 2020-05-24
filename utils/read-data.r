@@ -31,43 +31,49 @@ read_ifr_data <- function(){
 
 translate_region_names <- function(
   data,
-  translation_file="Italy/data/province_name_translation.csv",
-  field_name="country",
-  trans_field_start="google_county",
-  trans_field_end="country"
+  translation_file="data/covid19model_zones_prepared.csv",
+  data_name_field="country",
+  model_name_field = "covid19model_region",  # the column in the translation csv with the target names
+  mobility_name_field = "GCMR_region"  # the column in the translation csv with the source names
 ){
   # Need revamp
-  stop("rad-data.r : translate region names not coded")
+  # stop("rad-data.r : translate region names not coded")
 
   nametrans <- read.csv(translation_file)
-  # add Italy row to translation layer
-  Italy<-data.frame(denominazione_regione=Country,google_county=Country,county=Country)
-  nametrans<-bind_rows(nametrans,Italy)
-  mobility$country<-as.factor(mobility$country)
-  nametrans$google_county<-as.factor(nametrans$google_county)
-  #mobility <- mobility %>% filter(country !="")
-  colnames(nametrans)[which(colnames(nametrans)=="google_county")]<-"country"
-  mobility <- inner_join(mobility,nametrans,by.x="country",by.y="country") # fix names of regions
-  mobility$country<-str_replace_all(mobility$denominazione_regione, " ", "_")
-  mobility <- mobility %>% select(country,date,grocery.pharmacy,parks,residential,retail.recreation,transitstations,workplace)
-  
-  # Changing region names
-  nametrans <- read.csv("Italy/data/province_name_translation.csv")
-  colnames(nametrans)[which(colnames(nametrans)=="denominazione_regione")]<-"country"
-  nametrans$country<-as.factor(nametrans$country)
-  nametrans$country<-str_replace_all(nametrans$country, " ", "_")
-  mobility <- mobility %>% filter(country !=Country)
-  mobility <- inner_join(mobility,nametrans,by.x="country",by.y="country") # fix names of regions
-  mobility <- mobility[,-which(colnames(mobility) %in% c("country","google_county"))]
-  colnames(mobility)[which(colnames(mobility)=="county")] <- "country"
-  mobility$country<-str_replace_all(mobility$country, " ", "_")
-  mobility <- mobility %>% select("country","date","grocery.pharmacy","parks","residential","retail.recreation","transitstations","workplace") 
-  return(mobility)
+  # Replaces the names in the mobility data with that of the model 
+  for (i in 1:length(nametrans[[mobility_name_field]])) {
+    GCMR_name = nametrans[[mobility_name_field]][i]
+    model_name = nametrans[[model_name_field]][i]
+    data[[data_name_field]][data[[data_name_field]]==GCMR_name] <- model_name
+  }
+  return(data)
 }
 
+select_and_translate_region_names <- function(
+  data,
+  selection_file,
+  data_name_field="country",
+  model_name_field = "covid19model_region",  # the column in the translation csv with the target names
+  mobility_name_field = "GCMR_region"  # the column in the translation csv with the source names
+){
+  # Need revamp
+  # stop("rad-data.r : translate region names not coded")
+
+  nametrans <- read.csv(selection_file)
+  # Replaces the names in the mobility data with that of the model 
+  data_out <- c()
+  for (i in 1:length(nametrans[[mobility_name_field]])) {
+    GCMR_name = nametrans[[mobility_name_field]][i]
+    model_name = nametrans[[model_name_field]][i]
+    temp <- data[data[[data_name_field]]==GCMR_name,]
+    temp[[data_name_field]] <- model_name
+    data_out <- bind_rows(data_out, temp)
+  }
+  return(data_out)
+}
 
 read_google_mobility <- function(Country="Italy"){
-  google_mobility <- read.csv('Italy/data/Global_Mobility_Report.csv', stringsAsFactors = FALSE)
+  google_mobility <- read.csv('data/Global_Mobility_Report.csv', stringsAsFactors = FALSE)
   google_mobility$date = as.Date(google_mobility$date, format = '%Y-%m-%d')
   google_mobility[, c(6,7,8,9,10,11)] <- google_mobility[, c(6,7,8,9,10,11)]/100
   google_mobility[, c(6,7,8,9,10)] <- google_mobility[, c(6,7,8,9,10)] * -1
@@ -80,9 +86,8 @@ read_google_mobility <- function(Country="Italy"){
   colnames(google_mobility)[which(colnames(google_mobility)=="workplaces_percent_change_from_baseline")]<-"workplace"
   colnames(google_mobility)[which(colnames(google_mobility)=="residential_percent_change_from_baseline")]<-"residential"
   colnames(google_mobility)[which(colnames(google_mobility)=="retail_and_recreation_percent_change_from_baseline")]<-"retail.recreation"
-  google_mobility$country[which(google_mobility$country =="")]<-Country
-  colnames <- colnames %>% select(
-    "state",
+  google_mobility$country[which(google_mobility$country =="")]<-google_mobility$state[which(google_mobility$country =="")]
+  google_mobility <- google_mobility %>% select(
     "country",
     "date",
     "grocery.pharmacy",
@@ -96,13 +101,23 @@ read_google_mobility <- function(Country="Italy"){
   return (google_mobility)
 }
 
-read_mobility <- function(mobility_source){
+read_mobility <- function(mobility_source='google', selection_file="data/covid19model_zones_prepared.csv"){
   if(mobility_source == 'google'){
     mobility = read_google_mobility()
   } else {
     stop(sprintf("%s is not a recognised mobility_source.", mobility_source))
   }
-  mobility = translate_region_names(mobility)
+  mobility = select_and_translate_region_names(mobility, selection_file)
   # mobility<-google_mobility[which(google_mobility$country!="Italy"),]
+  mobility <- mobility %>% select(
+    "country",
+    "date",
+    "grocery.pharmacy",
+    "parks",
+    "residential",
+    "retail.recreation",
+    "transitstations",
+    "workplace"
+  ) 
   return(mobility)
 }
