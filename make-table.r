@@ -1,14 +1,23 @@
 library(matrixStats)
 args <- commandArgs(trailingOnly = TRUE)
 filename <- args[1]
-print(sprintf("Running %s",filename))
-load(filename)
+forecast = 7
+load(paste0("results/",filename))
+print(sprintf("loading: %s",paste0("results/",filename)))
+out = rstan::extract(fit)
+prediction = out$prediction
+estimated.deaths = out$E_deaths
 
 df_pop= read.csv("data/popt_ifr.csv", stringsAsFactors = FALSE)
 df_pop$country[df_pop$country == "United Kingdom"] = "United_Kingdom"
 
-dates_italy <- dates[[which(countries == "Italy")]]
-len_dates <- length(dates_italy)
+len_dates <- 0
+for (date in dates){
+  if (length(date) > len_dates){
+      len_dates <- length(date)
+      dates_all <- date
+  }
+}
 
 date_till_percentage <- as.character(Sys.Date())
 if(date_till_percentage > max(dates[[which(countries == "Italy")]]))
@@ -32,7 +41,6 @@ for(i in 1:length(countries)) {
   Country = countries[i]
   x = dates[[i]]
   N = length(x)
-  forecast = 7
   x  = c(x,x[length(x)]+1:forecast)
   padding <- len_dates - length(dates[[i]])
   y[[i]] = c(rep(0, padding),reported_cases[[i]], rep(NA, forecast))
@@ -62,57 +70,57 @@ for(i in 1:length(countries)) {
   total_cases[[i]]  = c(rep(0, padding),total_cases[[i]])
 }
 
-dates_italy  = c(dates_italy,dates_italy[length(dates_italy)]+1:forecast)
+dates_all  = c(dates_all,dates_all[length(dates_all)]+1:forecast)
 cases <- do.call(rbind, cases)
 cases_df <- as.data.frame(cases)
-names(cases_df) <- dates_italy
+names(cases_df) <- dates_all
 cases_df$countries <- countries
 # write.csv(cases_df, "figures/cases.csv")
 
 total_cases <- do.call(rbind, total_cases)
 total_cases_df <- as.data.frame(total_cases)
-names(total_cases_df) <- dates_italy
+names(total_cases_df) <- dates_all
 total_cases_df$countries <- countries
 # write.csv(total_cases_df, "figures/total_cases.csv")
 
 deaths <- do.call(rbind, deaths)
 deaths_df <- as.data.frame(deaths)
-names(deaths_df) <- dates_italy
+names(deaths_df) <- dates_all
 deaths_df$countries <- countries
 # write.csv(deaths_df, "figures/deaths.csv")
 
 total_deaths <- do.call(rbind, total_deaths)
 total_deaths_df <- as.data.frame(total_deaths)
-names(total_deaths_df) <- dates_italy
+names(total_deaths_df) <- dates_all
 total_deaths_df$countries <- countries
 # write.csv(total_deaths_df, "figures/total_deaths.csv")
 
 rt <- do.call(rbind, rt)
 rt_df <- as.data.frame(rt)
-names(rt_df) <- dates_italy
+names(rt_df) <- dates_all
 rt_df$countries <- countries
 # write.csv(rt_df, "figures/rt.csv")
 
 fraction_infected <- do.call(rbind, fraction_infected)
 fraction_infected_df <- as.data.frame(fraction_infected)
-names(fraction_infected_df) <- dates_italy
+names(fraction_infected_df) <- dates_all
 fraction_infected_df$countries <- countries
 # write.csv(fraction_infected_df, "figures/fraction_infected.csv")
 
 fraction_infected_li <- do.call(rbind, fraction_infected_li)
 fraction_infected_li_df <- as.data.frame(fraction_infected_li)
-names(fraction_infected_li_df) <- dates_italy
+names(fraction_infected_li_df) <- dates_all
 fraction_infected_li_df$countries <- countries
 # write.csv(fraction_infected_li_df, "figures/fraction_infected_li.csv")
 
 fraction_infected_ui <- do.call(rbind, fraction_infected_ui)
 fraction_infected_ui_df <- as.data.frame(fraction_infected_ui)
-names(fraction_infected_ui_df) <- dates_italy
+names(fraction_infected_ui_df) <- dates_all
 fraction_infected_ui_df$countries <- countries
 # write.csv(fraction_infected_ui_df, "figures/fraction_infected_ui.csv")
 
-total_infected = data.frame(countries=countries,mean=fraction_infected[,dates_italy == date_till_percentage],
-                            li=fraction_infected_li[,dates_italy == date_till_percentage],ui=fraction_infected_ui[,dates_italy == date_till_percentage])
+total_infected = data.frame(countries=countries,mean=fraction_infected[,dates_all == date_till_percentage],
+                            li=fraction_infected_li[,dates_all == date_till_percentage],ui=fraction_infected_ui[,dates_all == date_till_percentage])
 total_infected$value = sprintf("%.02f%% [%.02f%%-%.02f%%]",
                               total_infected$mean*100,total_infected$li*100,total_infected$ui*100)
 total_infected[order(total_infected$countries),c("countries","value")]
@@ -126,14 +134,14 @@ write.csv(total_infected,paste0("web/data/total_infected.csv"),row.names=F)
 
 fraction_obs_infected <- do.call(rbind, fraction_obs_infected)
 fraction_obs_infected_df <- as.data.frame(fraction_obs_infected)
-names(fraction_obs_infected_df) <- dates_italy
+names(fraction_obs_infected_df) <- dates_all
 fraction_obs_infected_df$countries <- countries
 # write.csv(fraction_obs_infected_df, "figures/fraction_obs_infected.csv")
 
 
 fraction_total_obs_infected <- do.call(rbind, fraction_total_obs_infected)
 fraction_total_obs_infected_df <- as.data.frame(fraction_total_obs_infected)
-names(fraction_total_obs_infected_df) <- dates_italy
+names(fraction_total_obs_infected_df) <- dates_all
 fraction_total_obs_infected_df$countries <- countries
 # write.csv(fraction_total_obs_infected_df, "figures/fraction_total_obs_infected.csv")
 

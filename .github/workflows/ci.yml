@@ -31,13 +31,6 @@ jobs:
       run: |
         docker run --rm --user $(id -u):$(id -g) --env DEBUG=TRUE covid19model:latest Rscript web-fetch-and-run.r
 
-    - name: Push image to GitHub packages
-      if: github.event_name == 'push'
-      run: |
-        IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/covid19model:latest"
-        docker tag covid19model:latest $IMAGE
-        docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
-        docker push $IMAGE
 
   conda:
     runs-on: ${{ matrix.os }}
@@ -58,5 +51,11 @@ jobs:
     - name: Run short debug simulation
       run: |
         conda run --name covid19model Rscript base.r base
+      env:
+        DEBUG: "TRUE"
+
+    - name: Run short debug simulation for french regions
+      run: |
+        conda run --name covid19model Rscript base-region-france.r base
       env:
         DEBUG: "TRUE"

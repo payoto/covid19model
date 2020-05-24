@@ -1,104 +1,214 @@
-![](https://github.com/ImperialCollegeLondon/covid19model/workflows/CI/badge.svg)
+# covid19model - The French local forecasting version
 
-# covid19model
-Code for modelling estimated deaths and cases for COVID19 from Report 13 published by MRC Centre for Global Infectious Disease Analysis, Imperial College London: [Estimating the number of infections and the impact of nonpharmaceutical interventions on COVID-19 in 11 European countries](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-13-europe-npi-impact/) 
+![CI status](https://github.com/payoto/covid19model/workflows/CI/badge.svg)
 
+This code is derivative work from the Imperial College Study [Estimating the number of infections and the impact of nonpharmaceutical interventions (NPI) on COVID-19 in 11 European countries](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-13-europe-npi-impact/).
+This repository extends applies the same NPI effect fitting and modelling to the regions (and possibly departements) in France.
+The modifications to the code are made:
+
+- To make it more modular and facilitate reuse.
+- To handle additional data streams beyond the ECDC.
+- To validate the stability of the predictions with time.
+
+This code is part of the [data against covid-19](https://opencovid19.fr/)
+citizens' initiative for open data and open source code around the COVID-19
+pandemic.
+
+Looking to contribute? Check the contributing section below on ways you can help
+and then go to our [projects page](https://github.com/payoto/covid19model/projects)!
+
+Simulation results for analysis are in our [sister repository](https://github.com/payoto/covid19model-fr-regions-results).
+
+
+## Motivation for regional predictions
+
+Mid-March conversations between the
+[data against covid-19](https://opencovid19.fr/) initiative and
+hospital managers revealed a need for local predictions of the evolution of the
+COVID-19 pandemic. France has been unevenly hit by the spread of
+the novel coronavirus, and in order to most effectively allocate resources on a
+national level, an understanding of local progression is critical.
+
+## Information about the model from Imperial College London
+>
+> Code for modelling estimated deaths and cases for COVID19 from Report 13
+published by MRC Centre for Global Infectious Disease Analysis, Imperial
+College London:
+[Estimating the number of infections and the impact of nonpharmaceutical interventions on COVID-19 in 11 European countries](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-13-europe-npi-impact/).
+>
 If you are looking for the individual based model used in [Report 9](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-9-impact-of-npis-on-covid-19/), please look [here](https://github.com/mrc-ide/covid-sim)
+> 
+>## Version 5 Release
+>
+>This is the release related to [report 21](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-21-brazil/), where we use mobility data to estimate situation in Brazil. All other code is still the same.
+>
+>To run this code you can directly run the base-Brazil.r file or from command line after seting the current directory as the repository directory run the following command `Rscript base-Brazil.r`
+>
+>The code shold be run in full mode to obtain any results. Not running full model to estimate anything is not recommended and discouraged. Only full run should be used to get results.
+>
+>The instructions for European and Italy code are same as earlier (Look at version 3 and version 4). This release is specific to [Brazil report](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-21-brazil/)
+>
+>## Version 4 Release
+>
+>This is the release related to [report 20](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-20-italy/), where we use mobility data to estimate situation in Italy. All other code is still the same.
+>
+>To run this code you can directly source the base-italy.r file in rstudio inside the project or from command line after setting the current directory as the repository directory run the following command `Rscript base-italy.r base-italy google interventions '~ -1 + residential + transit + averageMobility' '~ -1 + residential + transit + averageMobility'`
+>
+>The code for scenarios runs only in full mode not in short run or debug mode. Not running full model to estimate anything is not recommended and discouraged. Only full run should be used to get results.
+>
+>The instructions for European code are below. This release is specific to [Italy report](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-20-italy/)
+>
+>## Version 3 Release
+>In this update, we first extended our model from version 2 to have 'partial-pooling' for lockdown across all countries. This means now we have a global effect of lockdown along with each country having its own different lockdown effect. We also made our code modular, stan code faster (with help from the community) and now we create CSV outputs too for usage. 
+>
+>You can directly get csv files [here](https://mrc-ide.github.io/covid19estimates/#/download ) and new model description [here](https://arxiv.org/abs/2004.11342)
+>
+>## Notice
+> * Python code is right now not updated and won't work. Python code is good for only version 1 model and data.
+> * base_general.r and base_general.stan, base_general_speed.stan and  	base_general_speed2.stan are now valid models for only version2
+>
+> ## Version 2 Release
+>
+>In this update we extend our original [model](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-13-europe-npi-impact/)  to include (a) population saturation effects, (b) prior uncertainty on the infection fatality ratio and (c) a more balanced prior on intervention effects.  We also (d) included another 3 countries (Greece, the Netherlands and Portugal). The updated technical detail is available [here](https://github.com/ImperialCollegeLondon/covid19model/blob/master/Technical_description_of_Imperial_COVID_19_Model.pdf).
+>
+> You can directly look at our results [here](https://imperialcollegelondon.github.io/covid19estimates)
+>
+> This repository has code for replication purposes. The bleeding edge code and advancements are done in a private repository. Ask report authors for any collaborations.
 
-## Version 5 Release
+To see the full readme from the original repository please consult either
+the [readme on upstram-master](https://github.com/payoto/covid19model/tree/upstream-master) or the [ICL readme](https://github.com/ImperialCollegeLondon/covid19model/blob/master/README.md).
 
-This is the release related to [report 21](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-21-brazil/), where we use mobility data to estimate situation in Brazil. All other code is still the same.
+The original readme includes more details on configuring and running the model.
 
-To run this code you can directly run the base-Brazil.r file or from command line after seting the current directory as the repository directory run the following command `Rscript base-Brazil.r`
+## Method
 
-The code shold be run in full mode to obtain any results. Not running full model to estimate anything is not recommended and discouraged. Only full run should be used to get results.
+In an attempt to analyse and predict progression of the epidemic in France,
+the model from the study of non-pharmaceutical interventions on the basis of death data produced and published by Imperial is used in conjunction with the
+latest available French regional data from [opencovid19-fr/data](https://github.com/opencovid19-fr/data).
 
-The instructions for European and Italy code are same as earlier (Look at version 3 and version 4). This release is specific to [Brazil report](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-21-brazil/)
+### Data sources
 
-## Version 4 Release
+'Live' data sources updated regularly:
 
-This is the release related to [report 20](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-20-italy/), where we use mobility data to estimate situation in Italy. All other code is still the same.
+- [opencovid19-fr/data](https://github.com/opencovid19-fr/data) French regions and departments covid-19 death data;
+- [ECDC](https://www.ecdc.europa.eu/en) European countries death data;
+- INSEE data on the breakdown of French population by age preprocessed in [scrouzet/covid19-incrementality](https://raw.githubusercontent.com/scrouzet/covid19-incrementality/master/data/INSEE%20-%20year%20x%20dept%20x%20sex%20x%20age%20-%20population.csv).
 
-To run this code you can directly source the base-italy.r file in rstudio inside the project or from command line after setting the current directory as the repository directory run the following command `Rscript base-italy.r base-italy google interventions '~ -1 + residential + transit + averageMobility' '~ -1 + residential + transit + averageMobility'`
+'Static' sources not updated:
 
-The code for scenarios runs only in full mode not in short run or debug mode. Not running full model to estimate anything is not recommended and discouraged. Only full run should be used to get results.
+- EHPAD population age breakdown from the [DREES](http://www.data.drees.sante.gouv.fr/ReportFolders/reportFolders.aspx);
+- Infection Fatality Ration (IFR) provided by original repository, calculation
+by the ICL MRC Centre for Global Infectious Disease Analysis in [report 12](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-12-global-impact-covid-19/).
 
-The instructions for European code are below. This release is specific to [Italy report](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-20-italy/)
+### Data processing
 
+The original code is developed on `.csv` files downloaded from the
+ECDC. These are then converted to `.rds`.
 
-## Version 3 Release
-In this update, we first extended our model from version 2 to have 'partial-pooling' for lockdown across all countries. This means now we have a global effect of lockdown along with each country having its own different lockdown effect. We also made our code modular, stan code faster (with help from the community) and now we create CSV outputs too for usage. 
+The processing of French regional and departmental data is performed in 3 steps:
 
-You can directly get csv files [here](https://mrc-ide.github.io/covid19estimates/#/download ) and new model description [here](https://arxiv.org/abs/2004.11342)
+- Download and pre-process CSV: [`data/update-french-regional-data.sh`](data/update-french-regional-data.sh)
+  - Process to ECDC format CSV: [`data/extract_opencovidfr_2_ICL.py`](data/extract_opencovidfr_2_ICL.)
+- Format pre-processed data to RDS: [`data/fetch-region-france.r`](data/fetch-region-france.r)
 
-## Notice
- :warning: Python code is right now not updated and won't work. Python code is good for only version 1 model and data.
- 
- :warning: base_general.r and base_general.stan, base_general_speed.stan and  	base_general_speed2.stan are now valid models for only version2
+#### Notes about data from France
 
-:warning: This code is released with no support. We try our best to look at issues and pull request but can't help people with setup most of the time. We have docker images and conda environment file to make it easy for you to get started with the setup, any other approach assumes user can handle their computing environments approriately.
+- The data from opencovid19-fr are deaths since the epidemic start.
+- Deaths in nursing homes (EHPAD) are reported separately to those in hospitals.
+- For all French regions only the hospital deaths are available.
 
-:warning: This model is in active development and so parameter name and behaviours, and output file formats will change without notice.
+These observations led to the following choices in the processing of the
+opencovid19-fr data:
 
-:warning: As with any mathematical model, it is easy to misconfigure inputs and therefore get meaningless outputs. The development team only endorses outputs it has itself generated.
+- Geographical "Regions" and "departements" only consider deaths at hospital.
+- Three additional regions are defined:
+  - `France-OC19` : France's death data in hospitals and EHPAD as provided by `opencovid19-fr/data`;
+  - `France-Hopitaux` : France's death data from hospitals;
+  - `France-EHPAD` : France's death data from nursing homes (EHPAD).
 
-## Version 2 Release
-In this update we extend our original [model](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-13-europe-npi-impact/)  to include (a) population saturation effects, (b) prior uncertainty on the infection fatality ratio and (c) a more balanced prior on intervention effects.  We also (d) included another 3 countries (Greece, the Netherlands and Portugal). The updated technical detail is available [here](https://github.com/ImperialCollegeLondon/covid19model/blob/master/Technical_description_of_Imperial_COVID_19_Model.pdf).
-
-You can directly look at our results [here](https://imperialcollegelondon.github.io/covid19estimates)
-
-
-This repository has code for replication purposes. The bleeding edge code and advancements are done in a private repository. Ask report authors for any collaborations. 
+The separation between the hospital and EHPAD data is done, permit an
+acceptable fit on the French data despite the change in data reporting half-way
+through the period.
 
 ## Contributing
 
-We welcome all potential collaborators and contributors from the wider community. Please see [contributing](contributing.md) for more details.
+There are 3 ways to contribute:
 
-# Installing dependencies
+- Running the code (it's expensive! 10-20h of runtime on 4 core desktop machine);
+- Analysing forecasting accuracy;
+- Develop the software itself, improve useability, modelling accuracy and
+data handling.
 
-## Using Conda
+### Running the code
 
-An `environment.yml` file is provided and can be used to build a virtual
-environment containing all model dependencies. Create the environment using:
+- Check the todo items in the [run projects page](https://github.com/payoto/covid19model/projects/2);
+- Setup your environement: docker and conda are supported.
+- Test your setup `Rscript base-region-france.r --debug`: this should run
+without errors.
+- Run the model `Rscript base-region-france.r --full`: this takes HOURS.
+- Upload the `.csv` files generated in `results/base-full-yyyymmddTHHMMSS-JOBID/` to
+[the result repository](https://github.com/payoto/covid19model-fr-regions-results).
+
+If you have previously run the code and wish to reprocess some data to the
+latest formats, run command:
+
+```sh
+  Rscript reprocess-stanfit.r --all
 ```
-conda env create -f environment.yml
+
+For more options on reprocessing your data:
+
+```sh
+  Rscript reprocess-stanfit.r --help
 ```
 
-Then activate the environment for use:
-```
-conda activate covid19model
-```
 
-## Using Docker
+> ### Results Format
+>
+>* The results are stored in two folders results and figures.
+>* Results has the stored stan fits and data used for plotting
+>* Figures have the images with daily cases, daily death and Rt for all countries.
 
-A [Docker][] image providing all model dependencies is available. See
-[docker/README.md](docker/) for details of running the model with Docker.
+### Analysis of results
 
-[Docker]: https://www.docker.com/
+While model and feature development on the model is welcome you can also
+contribute by analysing the results in detail. To do that we are in the process
+of making results available.
+To analyse model performance:
 
-## Other
+- Fork the repository;
+- Check the todo items in the [analysis projects page](https://github.com/payoto/covid19model/projects/2);
+- Download the result `.csv` files from
+[the result repository](https://github.com/payoto/covid19model-fr-regions-results).
+- Suggest a new analysis, preferably as a jupyter notebook.
 
-If you wish to install packages into your native R environment or with a system
-package manager please see `environment.yml` for a full list of dependencies.
+### To develop the code
 
-# How to run the code
+- Fork the repository;
+- Check the todo items in the [development projects page](https://github.com/payoto/covid19model/projects/1);
+- Submit a pull request against the more appropriate branch, depending on what you have added.
 
-There are two ways to run our code:-
-* Open the rstudio project covid19model.Rproj file in rstudio and run/source base.r file
-* To run from commandline please enter the cloned directory and type `Rscript base.r base` in terminal
+## Organisation
 
-Please note to not make you wait for long we have by default set run sampling to a short period. For proper estimates please run it in FULL mode either by setting the flag `--full` or the environment variable `FULL=TRUE`. This will run sampling for 4000 iterations with 2000 warmups and 4 chains. The run time for 14 countries using new faster code is around 50 mins/1hr for the version 3 code.
+Much of the discussion is done in the data against covid-19 slack that you can [join here](https://opencovid19.fr/). If you are not part of it feel free to
+submit an issue on this repository.
 
-## Run mode settings 
-Three different run modes are supported:
+### Git Branches
 
-* DEBUG which can either be enabled by setting the flag `--debug` when running the base.r file as such: 
-  * `Rscript base.r base --debug` or by setting the environment variable `DEBUG` to `TRUE`.
-* DEFAULT which will run if neither full nor debug are set. Please note that for proper estimates FULL should always be set.
-* FULL which must always be used if you want to obtain reliable results and can be enabled by setting the flag `--full` on the command line: 
-  * `Rscript base.r base --full` or by setting the environment variable `FULL` to `TRUE`. 
+- [`master`](https://github.com/payoto/covid19model/tree/master) is the production branch, modelling for prediction is run on this
+code.
+- [`france-regions`](https://github.com/payoto/covid19model/tree/france-regions) is a development branch for features looking to improve
+modelling and processing of French regions.
+- [`upstream-master`](https://github.com/payoto/covid19model/tree/upstream-master) an exact mirror of the [original model](https://github.com/ImperialCollegeLondon/covid19model).
+- [`community-contribs`](https://github.com/payoto/covid19model/tree/community-contribs) Branch to pull in contributions from the rest of the
+community that is actively developing this `covid19model`.
+- [`modularisation`](https://github.com/payoto/covid19model/tree/modularisation) development branch of features which can be useful to
+other community projects.
 
-# Results 
-* The results are stored in two folders results and figures.
-* Results have the stored stan fits and data used for plotting
-* Figures have the images with daily cases, daily death and Rt for all countries.
+## References
+
+- Original ICL report:
+
+Seth Flaxman, Swapnil Mishra, Axel Gandy et al. Estimating the number of infections and the impact of nonpharmaceutical interventions on COVID-19 in 11 European countries. Imperial College London (30-03-2020)
+doi: <https://doi.org/10.25561/77731>
+

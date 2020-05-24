@@ -1,6 +1,6 @@
 library(rstan)
 library(data.table)
-library(lubridate)
+library(lubridate,warn.conflicts = FALSE)
 library(gdata)
 library(dplyr)
 library(tidyr)
@@ -15,34 +15,20 @@ library(gtable)
 library(zoo)
 
 source('Italy/code/utils/read-data-subnational.r')
+# provide functions for pre and post processing
+source("utils/arg-parser.r")
+source('utils/read-data.r')
+source('utils/read-interventions.r')
 source('utils/process-covariates.r')
 
+VERSION="v5"
+
 # Commandline options and parsing
-parser <- OptionParser()
-parser <- add_option(parser, c("-D", "--debug"), action="store_true",
-                     help="Perform a debug run of the model")
-parser <- add_option(parser, c("-F", "--full"), action="store_true",
-                     help="Perform a full run of the model")
-cmdoptions <- parse_args(parser, args = commandArgs(trailingOnly = TRUE), positional_arguments = TRUE)
-
-# Default run parameters for the model
-# Sys.setenv(DEBUG = "TRUE") # to run  in debug mode
-if(is.null(cmdoptions$options$debug)) {
-  DEBUG = Sys.getenv("DEBUG") == "TRUE"
-} else {
-  DEBUG = cmdoptions$options$debug
-}
-# Sys.setenv(FULL = "TRUE") # to run  in full mode
-if(is.null(cmdoptions$options$full)) {
-  FULL = Sys.getenv("FULL") == "TRUE"
-} else {
-  FULL = cmdoptions$options$full
-}
-
-if(DEBUG && FULL) {
-  stop("Setting both debug and full run modes at once is invalid")
-}
-
+# Needs cleaning
+parsedargs <- base_arg_parse()
+DEBUG <- parsedargs[["DEBUG"]]
+FULL_RUN <- parsedargs[["FULL"]]
+StanModel <- parsedargs[["StanModel"]]
 if(length(cmdoptions$args) == 0) {
   StanModel = 'base-italy'
 } else {
@@ -68,21 +54,21 @@ StanModel = args[1]
 cat(sprintf("Running:\nStanModel = %s\nMobility = %s\nInterventions = %s\nFixed effects:%s\nRandom effects:%s\nDebug: %s\n",
             StanModel,args[2],args[3], args[4],args[5], DEBUG))
 
+# Read which countires to use
+countries <- read.csv('data/regions.csv', stringsAsFactors = FALSE)
 # Read deaths data for regions
 d <- read_obs_data()
-regions<-unique(as.factor(d$country))
+regions <- countries
 
 # Read ifr 
-ifr.by.country <- read_ifr_data(unique(d$country))
-ifr.by.country <- ifr.by.country[1:22,]
+ifr.by.country <- read_ifr_data()
 
 # Read google mobility, apple mobility, interventions, stringency
 google_mobility <- read_google_mobility("Italy")
 mobility<-google_mobility[which(google_mobility$country!="Italy"),]
 
 # Read interventions
-interventions <- read_interventions()
-interventions<-interventions[which(interventions$Country!="Italy"),]
+interventions <- read_interventions('data/interventions.csv')
 
 
 # Table 1 and top 7
@@ -111,7 +97,7 @@ reported_cases <- processed_data$reported_cases
 
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
-m = stan_model(paste0('Italy/code/stan-models/',StanModel,'.stan'))
+m = stan_model(paste0('stan-models/',StanModel,'.stan'))
 
 if(DEBUG) {
   fit = sampling(m,data=stan_data,iter=40,warmup=20,chains=2)
@@ -130,6 +116,18 @@ JOBID = Sys.getenv("PBS_JOBID")
 if(JOBID == "")
   JOBID = as.character(abs(round(rnorm(1) * 1000000)))
 print(sprintf("Jobid = %s",JOBID))
+
+countries <- countries$Regions
+covariate_data = list(interventions, mobility)
+save.image(paste0('results/',StanModel,'-',JOBID,'.Rdata'))
+save(fit, prediction, dates,reported_cases,deaths_by_country,countries, estimated_deaths_raw, estimated_deaths_cf, 
+  out,interventions, VERSION,file=paste0('results/',StanModel,'-',JOBID,'-stanfit.Rdata'))
+
+## Ensure that output directories exist
+dir.create("results/", showWarnings = FALSE, recursive = TRUE)
+dir.create("figures/", showWarnings = FALSE, recursive = TRUE)
+dir.create("web/", showWarnings = FALSE, recursive = TRUE)
+dir.create("web/data", showWarnings = FALSE, recursive = TRUE)
 
 filename <- paste0(StanModel,'-',JOBID)
 
@@ -200,4 +198,42 @@ if (FULL){
   make_scenario_comparison_plots_mobility(JOBID = JOBID, StanModel, len_forecast = len_forecast, 
                                           last_date_data = max(dates[[1]]) + len_forecast, baseline = FALSE, 
                                           mobility_increase = 40,top=9)
+print("Generating covariate size effects plot")
+covariate_size_effects_error <- system(paste0("Rscript covariate-size-effects.r ", filename,'-stanfit.Rdata'),intern=FALSE)
+if(covariate_size_effects_error != 0){
+  stop(sprintf("Error while plotting covariate size effects! Code: %d", covariate_size_effects_error))
+}
+
+mu = (as.matrix(out$mu))
+colnames(mu) = countries
+g = bayesplot::mcmc_intervals(mu,prob = .9)
+ggplot2::ggsave(sprintf("results/%s-mu.png",filename),g,width=4,height=6)
+tmp = lapply(1:length(countries), function(i) (out$Rt_adj[,stan_data$N[i],i]))
+Rt_adj = do.call(cbind,tmp)
+colnames(Rt_adj) = countries
+g = bayesplot::mcmc_intervals(Rt_adj,prob = .9)
+ggsave(sprintf("results/%s-final-rt.png",filename),g,width=4,height=6)
+
+print("Generate 3-panel plots")
+plot_3_panel_error <- system(paste0("Rscript plot-3-panel.r ", filename,'-stanfit.Rdata'),intern=FALSE)
+if(plot_3_panel_error != 0){
+  stop(sprintf("Generation of 3-panel plots failed! Code: %d", plot_3_panel_error))
+}
+
+print("Generate forecast plot")
+plot_forecast_error <- system(paste0("Rscript plot-forecast.r ",filename,'-stanfit.Rdata'),intern=FALSE)
+if(plot_forecast_error != 0) {
+  stop(sprintf("Generation of forecast plot failed! Code: %d", plot_forecast_error))
+}
+
+print("Make forecast table")
+make_table_error <- system(paste0("Rscript make-table.r results/",filename,'-stanfit.Rdata'),intern=FALSE)
+if(make_table_error != 0){
+  stop(sprintf("Generation of alpha covar table failed! Code: %d", make_table_error))
+}
+
+
+verify_result_error <- system(paste0("Rscript web-verify-output.r ", filename,'.Rdata'),intern=FALSE)
+if(verify_result_error != 0){
+  stop(sprintf("Verification of web output failed! Code: %d", verify_result_error))
 }
