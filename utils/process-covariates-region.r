@@ -9,9 +9,18 @@ library(scales)
 library(stringr)
 library(abind)
 
-process_covariates_region <- function(region_to_country_map, interventions,
-    d, ifr.by.country, N2){
-
+process_covariates_region <- function(
+  region_to_country_map,
+  mobility,
+  interventions,
+  d,
+  ifr.by.country,
+  N2,
+  formula,
+  formula_partial
+){
+  interventions$Country <- factor(interventions$Country)
+  
   serial.interval = read.csv("data/serial_interval.csv")
   # Pads serial interval with 0 if N2 is greater than the length of the serial
   # interval array
@@ -30,18 +39,21 @@ process_covariates_region <- function(region_to_country_map, interventions,
   x1 = rgammaAlt(1e6,infection_to_onset["mean"], infection_to_onset["deviation"])
   # onset-to-death distribution
   x2 = rgammaAlt(1e6,onset_to_death["mean"], onset_to_death["deviation"])
-  ecdf.saved = ecdf(x1+x2)
+  ecdf.saved <- ecdf(x1+x2)
   # stan data definition
   stan_data <- list(M=length(names(region_to_country_map)),N=NULL,deaths=NULL,f=NULL,
-                   N0=6,cases=NULL,SI=serial.interval$fit[1:N2],features=NULL,
-                   EpidemicStart = NULL, pop = NULL)
+                    N0=6,cases=NULL,SI=serial.interval$fit[1:N2],
+                    EpidemicStart = NULL, pop = NULL)
   # Other values
   forecast <- 0
   dates <- list()
   reported_cases <- list()
   deaths_by_country <- list()
+  intervention_length <- length(colnames(interventions))
+  mobility_length <- length(colnames(mobility))
+  
   covariate_list <- list()
-
+  covariate_list_partial <- list()
   preprocess_error = FALSE
 
   k=1
