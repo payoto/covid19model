@@ -136,3 +136,27 @@ read_country_region_map <- function (zone_definition_file){
 
   return(region_to_country_map)
 }
+
+trim_country_map <- function(
+  d,
+  region_to_country_map,
+  death_thresh_epi_start=10
+){
+  # Removes contry map with not enough data 
+  # (a total number of deaths below `death_thresh_epi_start`)
+  keep_regions = logical(length = length(region_to_country_map))
+  for(i in 1:length(region_to_country_map))
+  {
+    Region <- names(region_to_country_map)[i]
+    Country = region_to_country_map[[Region]]  
+    d1=d[d$Country==Region,c(1,5,6,7)] 
+    keep_regions[i] = !is.na(which(cumsum(d1$Deaths)>=death_thresh_epi_start)[1]) # also 5
+    if (!keep_regions[i]) {
+      message(sprintf(
+        "WARNING: Region %s in country %s has not reached 10 deaths on %s, it cannot be processed\nautomatically removed from analysis\n",
+        Region, Country, max_date))
+    }
+  }
+  region_to_country_map <- region_to_country_map[keep_regions]
+  return (region_to_country_map)
+}

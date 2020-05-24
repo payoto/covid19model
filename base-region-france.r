@@ -40,20 +40,8 @@ countries <- names(region_to_country_map)
 d <- read_obs_data(countries, data_files, max_date)
 # Trim countries and regions that fail the number of death test.
 death_thresh_epi_start = 10
-keep_regions = logical(length = length(region_to_country_map))
-for(i in 1:length(region_to_country_map))
-{
-  Region <- names(region_to_country_map)[i]
-  Country = region_to_country_map[[Region]]  
-  d1=d[d$Country==Region,c(1,5,6,7)] 
-  keep_regions[i] = !is.na(which(cumsum(d1$Deaths)>=death_thresh_epi_start)[1]) # also 5
-  if (!keep_regions[i]) {
-    message(sprintf(
-      "WARNING: Region %s in country %s has not reached 10 deaths on %s, it cannot be processed\nautomatically removed from analysis\n",
-      Region, Country, max_date))
-  }
-}
-region_to_country_map <- region_to_country_map[keep_regions]
+region_to_country_map = trim_country_map(d, region_to_country_map, 
+                                         death_thresh_epi_start)
 countries <- names(region_to_country_map)
 ## get IFR and population from same file
 ifr.by.country <- return_ifr()
@@ -61,7 +49,6 @@ interventions <- read_interventions('data/interventions.csv', max_date)
 mobility <- read_mobility(mobility_source, zone_definition_file)
 
 # Modelling + Forecasting range needs serious revamp
-forecast <- 21
 N2 = 120
 # N2 <- (max(d$DateRep) - min(d$DateRep) + 1 + forecast)[[1]]
 
@@ -79,16 +66,16 @@ processed_data <- process_covariates_regions(
   formula_partial = formula_partial
 )
 
-stan_data = processed_data$stan_data
-dates = processed_data$dates
-deaths_by_country = processed_data$deaths_by_country
-reported_cases = processed_data$reported_cases
+stan_data <- processed_data$stan_data
+dates <- processed_data$dates
+reported_deaths <- processed_data$deaths_by_country
+reported_cases <- processed_data$reported_cases
 infection_to_onset = processed_data$infection_to_onset
 onset_to_death = processed_data$onset_to_death
 
 log_simulation_inputs(run_name, region_to_country_map,  ifr.by.country,
     infection_to_onset, onset_to_death, VERSION)
-stop()
+
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 m = stan_model(paste0('stan-models/',StanModel,'.stan'))
@@ -97,24 +84,23 @@ m = stan_model(paste0('stan-models/',StanModel,'.stan'))
 if(DEBUG) {
   fit = sampling(m,data=stan_data,iter=40,warmup=20,chains=2)
 } else if (FULL) {
-  fit = sampling(m,data=stan_data,iter=1800,warmup=1000,chains=5,thin=1,control = list(adapt_delta = 0.95, max_treedepth = 15))
+  fit = sampling(m,data=stan_data,iter=2000,warmup=1500,chains=4,thin=1,control = list(adapt_delta = 0.95, max_treedepth = 15))
 } else { 
-  fit = sampling(m,data=stan_data,iter=1000,warmup=500,chains=4,thin=1,control = list(adapt_delta = 0.95, max_treedepth = 10))
-}   
+  fit = sampling(m,data=stan_data,iter=600,warmup=300,chains=4,thin=1,control = list(adapt_delta = 0.95, max_treedepth = 10))
+}  
 
 
 out = rstan::extract(fit)
-prediction = out$prediction
-estimated.deaths = out$E_deaths
-estimated.deaths.cf = out$E_deaths0
+estimated_cases_raw = out$prediction
+estimated_deaths_raw = out$E_deaths
+estimated_deaths_cf = out$E_deaths0
 
+covariate_data = list(interventions, mobility)
 save.image(paste0('results/',run_name,'.Rdata'))
-
-
 save(
-  fit, prediction, dates,reported_cases,deaths_by_country,countries,
-  region_to_country_map, estimated.deaths, estimated.deaths.cf, 
-  out,interventions, infection_to_onset, onset_to_death, VERSION,
+  fit, estimated_cases_raw, dates,reported_cases,reported_deaths,countries,
+  region_to_country_map, estimated_deaths_raw, estimated_deaths_cf, 
+  out,interventions,covariate_data, infection_to_onset, onset_to_death, VERSION,
   file=paste0('results/',run_name,'-stanfit.Rdata'))
 
 postprocess_simulation(run_name, out, countries, dates)

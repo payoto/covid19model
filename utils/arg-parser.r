@@ -51,9 +51,11 @@ base_arg_parse <- function (){
         formula_pooling = '~ -1 + residential + transit + averageMobility',
         formula_partialpooling = '~ -1 + residential + transit + averageMobility'
     )
-    for (i in 1:length(cmdoptions$args)){ # overwerite defaults
-        std_args[i] = cmdoptions$args[i]
-    }	 
+    if (length(cmdoptions$args)>0){
+	    for (i in 1:length(cmdoptions$args)){ # overwerite defaults
+	        std_args[i] = cmdoptions$args[i]
+	    }	 
+    }
 
 	parsedargs <- c(
 			DEBUG=DEBUG,
@@ -102,7 +104,7 @@ create_analysis_folder <- function(FULL, DEBUG, StanModel){
     if(JOBID == "")
       JOBID = as.character(abs(round(rnorm(1) * 1000000)))
     print(sprintf("Jobid = %s",JOBID))
-    fullstr <- ""
+    fullstr <- "short"
     if (FULL){
       fullstr <- "fullrun"
     } else if (DEBUG) {

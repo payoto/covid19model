@@ -95,8 +95,11 @@ print(sprintf("Jobid = %s",JOBID))
 countries <- countries$Regions
 covariate_data = list(interventions, mobility)
 save.image(paste0('results/',StanModel,'-',JOBID,'.Rdata'))
-save(fit, prediction, dates,reported_cases,deaths_by_country,countries, estimated_deaths_raw, estimated_deaths_cf, 
-  out,interventions, VERSION,file=paste0('results/',StanModel,'-',JOBID,'-stanfit.Rdata'))
+save(
+  fit, prediction, dates,reported_cases,deaths_by_country,countries,
+  estimated_deaths_raw, estimated_deaths_cf, 
+  out,interventions, VERSION,
+  file=paste0('results/',StanModel,'-',JOBID,'-stanfit.Rdata'))
 
 ## Ensure that output directories exist
 dir.create("results/", showWarnings = FALSE, recursive = TRUE)
