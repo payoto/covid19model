@@ -74,7 +74,7 @@ infection_to_onset = processed_data$infection_to_onset
 onset_to_death = processed_data$onset_to_death
 
 log_simulation_inputs(run_name, region_to_country_map,  ifr.by.country,
-    infection_to_onset, onset_to_death, VERSION)
+    infection_to_onset, onset_to_death, VERSION, parsedargs)
 
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
@@ -101,6 +101,7 @@ save(
   fit, estimated_cases_raw, dates,reported_cases,reported_deaths,countries,
   region_to_country_map, estimated_deaths_raw, estimated_deaths_cf, 
   out,interventions,covariate_data, infection_to_onset, onset_to_death, VERSION,
+  formula_pooling, formula_partialpooling,
   file=paste0('results/',run_name,'-stanfit.Rdata'))
 
 postprocess_simulation(run_name, out, countries, dates)
