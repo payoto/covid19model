@@ -12,25 +12,6 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  docker:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-18.04
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2
-
-    # Docker build
-    - name: Build docker image
-      run: |
-        docker build -f docker/Dockerfile -t covid19model:latest .
-
-    - name: Perform a short debug simulation run incl. fetching from the ECDC
-      run: |
-        docker run --rm --user $(id -u):$(id -g) --env DEBUG=TRUE covid19model:latest Rscript web-fetch-and-run.r
-
 
   conda:
     runs-on: ${{ matrix.os }}
@@ -48,11 +29,6 @@ jobs:
 
     # conda activate does not get on well with GitHub actions so
     # work around this with conda run
-    - name: Run short debug simulation
-      run: |
-        conda run --name covid19model Rscript base.r base
-      env:
-        DEBUG: "TRUE"
 
     - name: Run short debug simulation for french regions
       run: |
