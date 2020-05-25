@@ -13,6 +13,9 @@ wget -O ${datadir}/opencovid19-fr-chiffres-cles.csv ${source_opencovid}
 wget -O ${datadir}/population-fra-INSEE-region-departement.csv ${source_INSEE_reg}
 wget -O ${datadir}/population-fra-INSEE-departement.csv ${source_INSEE_dep}
 
+# Get google mobility data
+wget https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv
+
 python3 data/extract_opencovidfr_2_ICL.py data/FRA/opencovid19-fr-chiffres-cles.csv all-france
 python3 data/extract_opencovidfr_2_ICL.py data/FRA/opencovid19-fr-chiffres-cles.csv REG
 python3 data/extract_opencovidfr_2_ICL.py data/FRA/opencovid19-fr-chiffres-cles.csv DEP
