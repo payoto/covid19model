@@ -45,7 +45,7 @@ base_arg_parse <- function (){
 	}
 
     std_args <- c( # Default ordered arguments
-        StanModel = 'base-italy',
+        StanModel = 'base-mobility',
         mobility_source = 'google',
         intervention_source = 'interventions',
         formula_pooling = '~ -1 + residential + transit + averageMobility',
