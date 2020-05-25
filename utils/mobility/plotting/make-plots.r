@@ -1,9 +1,9 @@
 library(lubridate)
 library(ggplot2)
-source("Italy/code/utils/read-data-subnational.r")
-source("Italy/code/plotting/format-data-plotting.r")
-source("Italy/code/plotting/make-three-panel-plots.r")
-source("Italy/code/plotting/make-rt-plot.r")
+source("utils/mobility/read-data")
+source("utils/mobility/plotting/format-data-plotting.r")
+source("utils/mobility/plotting/make-three-panel-plots.r")
+source("utils/mobility/plotting/make-rt-plot.r")
 
 make_plots_all <- function(filename, SIM=FALSE, label = "", last_date_data, ext = ".png"){
   print("In subnational code")

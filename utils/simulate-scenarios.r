@@ -1,6 +1,6 @@
-source("Italy/code/utils/simulate-regional.r")
-source("Italy/code/utils/make-table.r")
-source("Italy/code/plotting/make-scenario-plots-top7.r")
+source("utils/mobility/simulate-regional.r")
+source("utils/mobility/make-table.r")
+source("utils/mobility/plotting/make-scenario-plots-top7.r")
 
 mobility_scenarios <- function (run_name){
   len_forecast <- 8*7

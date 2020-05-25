@@ -10,7 +10,7 @@ library(stringr)
 library(abind)
 library(optparse)
 
-source("Italy/code/utils/read-data-subnational.r")
+source("utils/mobility/read-data-subnational.r")
 
 
 make_table <- function(filename, date_till_percentage){

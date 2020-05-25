@@ -119,19 +119,19 @@ covariate_data = list(interventions, mobility)
 
 save(fit, dates, reported_cases, reported_deaths, regions, states, JOBID ,
      estimated_cases_raw, estimated_deaths_raw, estimated_deaths_cf, stan_data, covariate_data,
-     file=paste0('Italy/results/',StanModel,'-',JOBID,'-stanfit.Rdata'))
+     file=paste0('results/',StanModel,'-',JOBID,'-stanfit.Rdata'))
 
-source("Italy/code/plotting/make-plots.r")
-make_plots_all(paste0('Italy/results/', StanModel, '-', JOBID, '-stanfit.Rdata'), 
+source("utils/mobility/plotting/make-plots.r")
+make_plots_all(paste0('results/', StanModel, '-', JOBID, '-stanfit.Rdata'), 
                last_date_data = max(dates[[1]]))
-source("Italy/code/utils/make-table.r")
+source("utils/mobility/make-table.r")
 # Prints attackrates to console
-make_table(paste0('Italy/results/', StanModel, '-', JOBID, '-stanfit.Rdata'), 
+make_table(paste0('results/', StanModel, '-', JOBID, '-stanfit.Rdata'), 
            date_till_percentage = max(dates[[1]]))
 
 # code for scenarios runs only in full mode
 if (FULL){
-  source("Italy/code/utils/simulate-regional.r")
+  source("utils/mobility/simulate-regional.r")
   len_forecast <- 8*7
   
   # Can make plots = TRUE if you want to see 3 panel plots for simulations and rt_plots
@@ -148,15 +148,15 @@ if (FULL){
                      simulate_code='Italy/code/stan-models/simulate.stan', mobility_vars=c(1,2,3), 
                      mobility_increase = 0)
   
-  source("Italy/code/utils/make-table.r")
+  source("utils/mobility/make-table.r")
   # Prints attack rates to console
   scenario_type = "constant-mob"
   mobility_increase = 0
-  make_table_simulation(paste0('Italy/results/sim-', scenario_type, "-", StanModel, '-', len_forecast, '-', mobility_increase, '-', JOBID, '-stanfit.Rdata'), 
+  make_table_simulation(paste0('results/sim-', scenario_type, "-", StanModel, '-', len_forecast, '-', mobility_increase, '-', JOBID, '-stanfit.Rdata'), 
                         date_till_percentage = max(dates[[1]]) + len_forecast)
   
   
-  source("Italy/code/plotting/make-scenario-plots-top7.r")
+  source("utils/mobility/plotting/make-scenario-plots-top7.r")
   
   make_scenario_comparison_plots_mobility(JOBID = JOBID, StanModel, len_forecast = len_forecast, 
                                           last_date_data = max(dates[[1]]) + len_forecast, baseline = FALSE, 

@@ -2,12 +2,12 @@ library(dplyr)
 library(lubridate)
 library(grid)
 library(gtable)
-source("Italy/code/plotting/format-data-plotting.r")
+source("utils/mobility/plotting/format-data-plotting.r")
 
 make_scenario_comparison_plots_mobility <- function(JOBID, StanModel, len_forecast, last_date_data, 
                                                     baseline=FALSE, mobility_increase = 20,top=7){
   print(paste0("Making scenario comparision plots for ", mobility_increase , "%"))
-  load(paste0('Italy/results/sim-constant-mob-', StanModel, '-', len_forecast, '-0-', JOBID, '-stanfit.Rdata'))
+  load(paste0('results/sim-constant-mob-', StanModel, '-', len_forecast, '-0-', JOBID, '-stanfit.Rdata'))
 
   countries <- states
   
@@ -31,11 +31,11 @@ make_scenario_comparison_plots_mobility <- function(JOBID, StanModel, len_foreca
   }    
   
   if (baseline == TRUE){
-    load(paste0('Italy/results/sim-increase-mob-baseline-', StanModel, '-', len_forecast, '-', mobility_increase, '-', JOBID, 
+    load(paste0('results/sim-increase-mob-baseline-', StanModel, '-', len_forecast, '-', mobility_increase, '-', JOBID, 
                 '-stanfit.Rdata'))
     out <- rstan::extract(fit)
   } else {
-    load(paste0('Italy/results/sim-increase-mob-current-', StanModel, '-', len_forecast, '-', mobility_increase, '-', 
+    load(paste0('results/sim-increase-mob-current-', StanModel, '-', len_forecast, '-', mobility_increase, '-', 
                 JOBID, '-stanfit.Rdata'))
     out <- rstan::extract(fit)
   }
