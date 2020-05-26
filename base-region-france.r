@@ -77,10 +77,10 @@ reported_deaths <- processed_data$deaths_by_country
 reported_cases <- processed_data$reported_cases
 infection_to_onset = processed_data$infection_to_onset
 onset_to_death = processed_data$onset_to_death
+processed_mobility = processed_data$processed_mobility
 
 log_simulation_inputs(run_name, region_to_country_map,  ifr.by.country,
-    infection_to_onset, onset_to_death, VERSION, parsedargs)
-
+    infection_to_onset, onset_to_death, VERSION, parsedargs, processed_mobility)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 m = stan_model(paste0('stan-models/',StanModel,'.stan'))

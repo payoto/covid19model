@@ -58,6 +58,7 @@ process_covariates_regions <- function(
   
   covariate_list <- list()
   covariate_list_partial <- list()
+  processed_mobility <-list()
   preprocess_error = FALSE
 
   k=1
@@ -251,7 +252,7 @@ process_covariates_regions <- function(
                                                      mobility1$retail.recreation + mobility1$workplace)/4)
     features <- model.matrix(formula, df_features)
     features_partial <- model.matrix(formula_partial, df_features)
-    
+    processed_mobility <- bind_rows(processed_mobility, bind_cols(mobility1,region_intervention))
     covariate_list[[k]] <- features
     covariate_list_partial[[k]] <- features_partial
     k <- k+1
@@ -283,7 +284,8 @@ process_covariates_regions <- function(
   # Normalise positive pooled covariate effects to be between 0 and 1
   stan_data$X_partial=normalise_covariate_array(stan_data$X_partial)
   
-  return(list("stan_data" = stan_data, "dates" = dates, "reported_cases"=reported_cases, "deaths_by_country" = deaths_by_country))
+  return(list("stan_data" = stan_data, "dates" = dates, "reported_cases"=reported_cases,
+   "deaths_by_country" = deaths_by_country, "processed_mobility"=processed_mobility))
 }
 
 normalise_covariate_array <- function(covariate_array){

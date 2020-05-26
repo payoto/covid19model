@@ -4,7 +4,9 @@ source("utils/ifr-tools.r")
 
 log_simulation_inputs <- function(
   run_name, region_to_country_map,  ifr.by.country,
-  infection_to_onset, onset_to_death, model_version="v2", parsedargs=c()){
+  infection_to_onset, onset_to_death, model_version="v2", parsedargs=c(),
+  processed_mobility=c()
+){
   # model_version defaults to 2 as from version 3 it gets passed.
   # stores the countries
   
@@ -44,6 +46,12 @@ log_simulation_inputs <- function(
   if (length(parsedargs) >0){
     write.csv(parsedargs, paste0(
       "results/", run_name, "-inputs-parsed-cmd-arguments.csv"
+      )
+    )
+  }
+  if (length(processed_mobility) >0){
+    write.csv(processed_mobility, paste0(
+      "results/", run_name, "-inputs-processed-mobility.csv"
       )
     )
   }
