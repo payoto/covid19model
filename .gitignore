@@ -80,7 +80,13 @@ Brazil/figures/*.txt
 Brazil/results/*.RDS
 
 data/Global_Mobility_Report.csv
-
+data/COVID-19-up-to-date.rds
+data/COVID-19-up-to-date.csv
+data/DEP.csv
+data/REG.csv
+data/all-france.csv
+data/all-france.rds
+data/FRA/opencovid19-fr-chiffres-cles.csv
 # Python
 # Byte-compiled / optimized / DLL files
 __pycache__/
