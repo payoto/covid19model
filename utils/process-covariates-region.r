@@ -86,7 +86,7 @@ process_covariates_regions <- function(
     region <- d[d$Country==Region,]
     region$DateRep <-region$DateRep
     region <-region[order(as.Date(region$DateRep)),]  # ensure date ordering
-
+    region$Deaths = remove_negative_deaths(region$Deaths)
     mobility1 <- mobility[mobility$country==Region,]
     if(!any(mobility$country==Region)){
       preprocess_error = TRUE
@@ -319,4 +319,35 @@ pad_dates_region_dataframe <- function(
   region <- na.locf(region, na.rm=FALSE)
   region <- na.locf(region, na.rm=FALSE, fromLast=TRUE)
   return(region)
+}
+
+
+remove_negative_deaths <- function (vals) {
+  # Removes negative values by setting them to 0 but reflects their
+  # effect by scaling the rest of the data keeping the same total number of deaths
+  # implied by the data.
+  neg_val = sum(vals[vals < 0])
+  if (neg_val < 0){
+    pos_val = sum(vals[vals > 0])
+    tot_val = neg_val + pos_val
+    vals[vals < 0] = 0
+    val_add = ceiling(vals * (-neg_val / tot_val))
+    while (sum(val_add) != -neg_val){
+      if (sum(val_add) > -neg_val){
+        ix=which.max(val_add)
+        val_add[ix] = val_add[ix] - 1
+      } else {
+        stop("should not be here")
+      }
+    }
+    vals = vals - val_add
+    message(sprintf(
+      "\tVals edited to have no negative numbers offset: %d (checksum: %d==%d)",
+      neg_val, tot_val, sum(vals)
+    ))
+    if(tot_val != sum(vals)){
+      stop(message("ERROR: `remove_negative_deaths should keep constant total.`"))
+    }
+  }
+  return(vals)
 }
