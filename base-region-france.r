@@ -40,17 +40,21 @@ countries <- names(region_to_country_map)
 d <- read_obs_data(countries, data_files, max_date)
 # Trim countries and regions that fail the number of death test.
 death_thresh_epi_start = 10
-region_to_country_map = trim_country_map(d, region_to_country_map, 
-                                         death_thresh_epi_start)
+
+trimmed_map = trim_country_map(
+  d, region_to_country_map, max_date, death_thresh_epi_start)
+region_to_country_map <- trimmed_map$region_to_country_map
 countries <- names(region_to_country_map)
+
+# Modelling + Forecasting
+min_forecast <- 14
+N2 <- trimmed_map$max_epi_data + min_forecast
+
 ## get IFR and population from same file
 ifr.by.country <- return_ifr()
 interventions <- read_interventions('data/interventions.csv', max_date)
 mobility <- read_mobility(mobility_source, zone_definition_file)
 
-# Modelling + Forecasting range needs serious revamp
-N2 = 120
-# N2 <- (max(d$DateRep) - min(d$DateRep) + 1 + forecast)[[1]]
 
 
 formula = as.formula(formula_pooling)
@@ -63,7 +67,8 @@ processed_data <- process_covariates_regions(
   ifr.by.country = ifr.by.country,
   N2 = N2,
   formula = formula,
-  formula_partial = formula_partial
+  formula_partial = formula_partial,
+  death_thresh_epi_start=death_thresh_epi_start
 )
 
 stan_data <- processed_data$stan_data

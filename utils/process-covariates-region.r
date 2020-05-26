@@ -21,7 +21,8 @@ process_covariates_regions <- function(
   ifr.by.country,
   N2,
   formula,
-  formula_partial
+  formula_partial,
+  death_thresh_epi_start=10
 ){
   interventions$Country <- factor(interventions$Country)
   
@@ -35,7 +36,6 @@ process_covariates_regions <- function(
     )
     serial.interval = rbind(serial.interval, pad_serial.interval)
   }
-  death_thresh_epi_start <- 10
   # various distributions required for modeling
   infection_to_onset <- c("mean"=5.1, "deviation"=0.86)
   onset_to_death <- c("mean"=18.8, "deviation"=0.45)

@@ -140,23 +140,36 @@ read_country_region_map <- function (zone_definition_file){
 trim_country_map <- function(
   d,
   region_to_country_map,
-  death_thresh_epi_start=10
+  max_date=Sys.Date(),
+  death_thresh_epi_start=10,
+  epi_death_offset=30
 ){
   # Removes contry map with not enough data 
   # (a total number of deaths below `death_thresh_epi_start`)
+  # And returns the length of the longest epidemic
   keep_regions = logical(length = length(region_to_country_map))
+  max_epi_data = 0
   for(i in 1:length(region_to_country_map))
   {
     Region <- names(region_to_country_map)[i]
     Country = region_to_country_map[[Region]]  
-    d1=d[d$Country==Region,c(1,5,6,7)] 
-    keep_regions[i] = !is.na(which(cumsum(d1$Deaths)>=death_thresh_epi_start)[1]) # also 5
+    d1=d[d$Country==Region,c(1,5,6,7)]
+    index_10_deaths = which(cumsum(d1$Deaths)>=death_thresh_epi_start)[1]
+    keep_regions[i] = !is.na(index_10_deaths) # also 5
     if (!keep_regions[i]) {
       message(sprintf(
         "WARNING: Region %s in country %s has not reached 10 deaths on %s, it cannot be processed\nautomatically removed from analysis\n",
         Region, Country, max_date))
+    } else {
+      region_epidemic_start = d1$DateRep[index_10_deaths] - days(epi_death_offset)
+      region_epidemic_length = max(d1$DateRep) - region_epidemic_start[1] + 1
+      max_epi_data = max(max_epi_data, region_epidemic_length[1])
     }
   }
+
   region_to_country_map <- region_to_country_map[keep_regions]
-  return (region_to_country_map)
+  return (list(
+    region_to_country_map=region_to_country_map,
+    max_epi_data=max_epi_data
+  ))
 }
