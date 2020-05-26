@@ -66,7 +66,7 @@ process_covariates_regions <- function(
   for(Region in names(region_to_country_map))
   {
     Country = region_to_country_map[[Region]]
-    print(sprintf("Region: %s in country: %s ",Region,Country))
+    message(sprintf("Region: %s in country: %s ",Region,Country))
     if(any(ifr.by.country$country == Region)){
         # to add
       IFR <- ifr.by.country$ifr[ifr.by.country$country == Country]
@@ -144,9 +144,10 @@ process_covariates_regions <- function(
     # forecasting mobility data
     date_max = max(region$DateRep)
     date_mobility_max = max(mobility1$date)
-    
+
+    # Foreward padding mobility data using repetition of last 7 days of data
     if (date_mobility_max < date_max){
-      print(paste(Region,'In padding mobility forward'))
+      message(paste('\t',Region,'In padding mobility forward'))
       forecast_days <- date_max - date_mobility_max
       forecast_dates <- date_mobility_max + days(1:forecast_days[[1]])
       forecast_data <- data.frame("country"=rep(Region,forecast_days[[1]]),"date" = as.Date(forecast_dates,format="%Y-%m-%d"))
@@ -187,6 +188,7 @@ process_covariates_regions <- function(
     index2 = index1-30
     
     print(sprintf("First non-zero cases is on day %d, and 30 days before 10 deaths is day %d",index,index2))
+    message(sprintf("\tFirst non-zero cases is on day %d, and 30 days before 10 deaths is day %d",index,index2))
     region=region[index2:nrow(region),]
     stan_data$EpidemicStart = c(stan_data$EpidemicStart,index1+1-index2)
     stan_data$pop = c(stan_data$pop,region_pop$popt)
@@ -200,9 +202,18 @@ process_covariates_regions <- function(
     
     dates[[Region]] =region$DateRep
     # hazard estimation
-    N = length(region$Cases)
+    N = nrow(region)
     print(sprintf("%s has %d days of data",Region,N))
+    message(sprintf("\t%s has %d days of data; start date %s",Region,N, region$DateRep[1]))
     forecast = N2 - N
+    
+    if (forecast<0){
+      stop(message("Error Modelling length is shorter than the length of the data, please increase N2"))
+    }
+    if (nrow(mobility1)>N2){
+      message("WARNING: Modelling length (N2) is shorter than the length of the mobility data, trimming.")
+      mobility1 <- mobility1[1:N2,]
+    }
     # IFR is the overall probability of dying given infection
     convolution = function(u) (IFR * ecdf.saved(u))
     
@@ -232,24 +243,25 @@ process_covariates_regions <- function(
       stan_data$N = as.array(stan_data$N)
     }
     #parsing features
-    df_features <- data.frame('schools_universities' = region_intervention$schools_universities, 
-                              'self_isolating_if_ill' = region_intervention$self_isolating_if_ill, 
-                              'social_distancing_encouraged' = region_intervention$social_distancing_encouraged, 
-                              'public_events' = region_intervention$public_events,
-                              'lockdown' = region_intervention$lockdown,
-                              'first' = 1*((region_intervention$schools_universities+
-                                              region_intervention$self_isolating_if_ill+
-                                              region_intervention$social_distancing_encouraged+
-                                              region_intervention$public_events+
-                                              region_intervention$lockdown) >= 1),
-                              'residential' = mobility1$residential, 
-                              'transit' = mobility1$transitstations, 
-                              'grocery' = mobility1$grocery.pharmacy,
-                              'parks' = mobility1$parks,
-                              'retail' = mobility1$retail.recreation,
-                              'workplace' = mobility1$workplace,
-                              'averageMobility' = (mobility1$grocery.pharmacy + mobility1$parks +
-                                                     mobility1$retail.recreation + mobility1$workplace)/4)
+    df_features <- data.frame(
+      'schools_universities' = region_intervention$schools_universities, 
+      'self_isolating_if_ill' = region_intervention$self_isolating_if_ill, 
+      'social_distancing_encouraged' = region_intervention$social_distancing_encouraged, 
+      'public_events' = region_intervention$public_events,
+      'lockdown' = region_intervention$lockdown,
+      'first' = 1*((region_intervention$schools_universities+
+                      region_intervention$self_isolating_if_ill+
+                      region_intervention$social_distancing_encouraged+
+                      region_intervention$public_events+
+                      region_intervention$lockdown) >= 1),
+      'residential' = mobility1$residential, 
+      'transit' = mobility1$transitstations, 
+      'grocery' = mobility1$grocery.pharmacy,
+      'parks' = mobility1$parks,
+      'retail' = mobility1$retail.recreation,
+      'workplace' = mobility1$workplace,
+      'averageMobility' = (mobility1$grocery.pharmacy + mobility1$parks +
+                             mobility1$retail.recreation + mobility1$workplace)/4)
     features <- model.matrix(formula, df_features)
     features_partial <- model.matrix(formula_partial, df_features)
     processed_mobility <- bind_rows(processed_mobility, bind_cols(mobility1,region_intervention))
