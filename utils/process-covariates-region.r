@@ -98,48 +98,24 @@ process_covariates_regions <- function(
     mobility1<-na.locf(mobility1)
     mobility1 <- mobility1[order(mobility1$date),]  # ensure date ordering
     # padding in raw data backwards ex. portugal
-    date_min <- dmy('31/12/2019') 
-    if (region$DateRep[1] > date_min){
-      print(paste(Region,'In padding death data'))
-      pad_days <-region$DateRep[1] - date_min
-      pad_dates <- date_min + days(1:pad_days[[1]]-1)
-      padded_data <- data.frame("Country" = rep(Region, pad_days),
-                                "DateRep" = as.Date(pad_dates,format="%Y-%m-%d"),
-                                "Cases" = as.integer(rep(0, pad_days)),
-                                "Deaths" = as.integer(rep(0, pad_days)),
-                                stringsAsFactors=F)
-      
-     region <- bind_rows(padded_data,region)
-    }
-    
-    # replace NA in mobility data
-    mobility1$grocery.pharmacy <- na.locf(mobility1$grocery.pharmacy)
-    mobility1$residential <- na.locf(mobility1$residential)
-    mobility1$parks <- na.locf(mobility1$parks)
-    mobility1$workplace <- na.locf(mobility1$workplace)
-    mobility1$retail.recreation <- na.locf(mobility1$retail.recreation)
-    mobility1$transitstations <- na.locf(mobility1$transitstations)
-    
+
+    date_min <- dmy('31/12/2019')
+    region <- pad_dates_region_dataframe(
+      region, date_field="DateRep",
+      date_start=date_min,
+      col_fill=list("Cases", "Deaths")
+    )
+
     # Padding in mobility data for dates before first time data exists
-    if (mobility1$date[1] > date_min){
-      print(paste(Region,'In padding mobility backwards'))
-      pad_days <- mobility1$date[1] - date_min
-      pad_dates <- date_min + days(1:pad_days[[1]]-1)
-      PAD = rep(0,pad_days)
-      if (mobility_length==8){
-        padded_data <- data.frame("country" = rep(Region, pad_days),
-                                  "date" = pad_dates,
-                                  "grocery.pharmacy" = PAD, #rep(mobility1$grocery.pharmacy[1],pad_days),
-                                  "parks" = PAD, #rep(mobility1$parks[1],pad_days),
-                                  "residential" = PAD, #rep(mobility1$residential[1],pad_days),
-                                  "retail.recreation" =PAD, #rep(mobility1$retail.recreation[1],pad_days),
-                                  "transitstations" = PAD, #rep(mobility1$transitstations[1],pad_days),
-                                  "workplace" = PAD, #rep(mobility1$workplace[1],pad_days),
-                                  stringsAsFactors=F)
-      }
-      mobility1 <- bind_rows(padded_data, mobility1)
-    }
-    mobility1 = mobility1[order(mobility1$date),]  # ensure date ordering
+    mobility1 <- pad_dates_region_dataframe(
+      mobility1, date_field="date", 
+      date_start=date_min,
+      col_fill=list(
+        "grocery.pharmacy", "parks", "residential",
+        "retail.recreation", "transitstations", "workplace"
+      ),
+      fill_value=c(0, "extend", "extend")
+    )
     
     # forecasting mobility data
     date_max = max(region$DateRep)
@@ -149,32 +125,13 @@ process_covariates_regions <- function(
     if (date_mobility_max < date_max){
       message(paste('\t',Region,'In padding mobility forward'))
       forecast_days <- date_max - date_mobility_max
-      forecast_dates <- date_mobility_max + days(1:forecast_days[[1]])
-      forecast_data <- data.frame("country"=rep(Region,forecast_days[[1]]),"date" = as.Date(forecast_dates,format="%Y-%m-%d"))
-      fore<-list()
-      
-      for(i in 3:mobility_length){
-        mob<- mobility1 %>% select(date,colnames(mobility[i]))
-        
-        # impute last week
-        #fore[[i]] <- c(0:(as.numeric(forecast_days)-1)) %>% map(function(s) ts[length(ts)-6+mod(s,7)])
-        f <- c(0:(as.numeric(forecast_days)-1)) %>% map(function(s) mob[nrow(mob)-6+mod(s,7),]) %>% bind_rows()
-        fore[[i]]<-f[,2]
-      }
-      
-      padded_data <- data.frame("country" = rep(Region, forecast_days[[1]]),
-                                "date" = forecast_dates,
-                                "grocery.pharmacy" = fore[[3]],
-                                "parks" = fore[[4]],
-                                "residential" = fore[[5]],
-                                "retail.recreation" = fore[[6]],
-                                "transitstations" = fore[[7]],
-                                "workplace" = fore[[8]],
-                                stringsAsFactors=F)
+      pad = mobility1[(nrow(mobility1)-6):nrow(mobility1),]
+      padded_data = pad[rep(seq_len(nrow(pad)), length.out = forecast_days[1]),]
+      padded_data$date = date_mobility_max + days(1:forecast_days[[1]])
       mobility1 <- bind_rows(mobility1,padded_data)
     }
     mobility1 = mobility1[order(mobility1$date),]  # ensure date ordering
-    mobility1<-na.locf(mobility1)
+    mobility1 <- na.locf(mobility1)
     
     index = which(region$Cases>0)[1]
     index1 = which(cumsum(region$Deaths)>=death_thresh_epi_start)[1] # also 5
@@ -187,12 +144,13 @@ process_covariates_regions <- function(
     }
     index2 = index1-30
     
-    print(sprintf("First non-zero cases is on day %d, and 30 days before 10 deaths is day %d",index,index2))
     message(sprintf("\tFirst non-zero cases is on day %d, and 30 days before 10 deaths is day %d",index,index2))
     region=region[index2:nrow(region),]
     stan_data$EpidemicStart = c(stan_data$EpidemicStart,index1+1-index2)
     stan_data$pop = c(stan_data$pop,region_pop$popt)
+    
     mobility1 = mobility1[index2:nrow(mobility1),]
+
     # NPI interventionss are being used
     interventions_region <- interventions[interventions$Country == Country, c(2,3,4,5,6)] # school, self-isolation, public, lockdown, social-distancing
     for (ii in 1:ncol(interventions_region)) {
@@ -203,7 +161,6 @@ process_covariates_regions <- function(
     dates[[Region]] =region$DateRep
     # hazard estimation
     N = nrow(region)
-    print(sprintf("%s has %d days of data",Region,N))
     message(sprintf("\t%s has %d days of data; start date %s",Region,N, region$DateRep[1]))
     forecast = N2 - N
     
@@ -214,6 +171,7 @@ process_covariates_regions <- function(
       message("WARNING: Modelling length (N2) is shorter than the length of the mobility data, trimming.")
       mobility1 <- mobility1[1:N2,]
     }
+
     # IFR is the overall probability of dying given infection
     convolution = function(u) (IFR * ecdf.saved(u))
     
@@ -320,4 +278,45 @@ normalise_covariate_array <- function(covariate_array){
     }
   }
   return(covariate_array)
+}
+
+pad_dates_region_dataframe <- function(
+  region,
+  date_field="date",
+  date_start=NULL,
+  date_end=NULL,
+  col_fill=list(),
+  fill_value=list(0,0,0)
+){
+  if(is.null(date_start)){
+    date_start <- region[1, date_field]
+  }
+  if(is.null(date_end)){
+    date_end <- region[nrow(region), date_field]
+  }
+
+  # Generates an internal pad
+  region_internal_pad = data.frame(
+    "date"=as.Date(
+      date_start + days(0:(date_end-date_start)),
+      format="%Y-%m-%d"),
+    stringsAsFactors=F)
+  # Merges the pad with the regions
+  region <- merge(
+    region, region_internal_pad,
+    by.x=date_field, by.y="date", all=TRUE) # extends region
+  region <- merge(
+    region, region_internal_pad,
+    by.x=date_field, by.y="date") # trims region to internal pad
+
+  region = region[order(region[[date_field]]),]
+  # Certain fields must be filled with specific values
+  for (field in col_fill) {
+    region[[field]] <- na.fill(region[[field]], fill=fill_value)
+  }
+  
+  # Others with closest non NA value
+  region <- na.locf(region, na.rm=FALSE)
+  region <- na.locf(region, na.rm=FALSE, fromLast=TRUE)
+  return(region)
 }
