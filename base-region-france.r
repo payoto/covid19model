@@ -48,7 +48,8 @@ countries <- names(region_to_country_map)
 
 # Modelling + Forecasting
 min_forecast <- 14
-N2 <- trimmed_map$max_epi_data + min_forecast
+min_N2 <- 130
+N2 <- max((trimmed_map$max_epi_data + min_forecast), min_N2)
 
 ## get IFR and population from same file
 ifr.by.country <- return_ifr()
