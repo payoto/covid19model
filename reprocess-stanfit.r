@@ -1,5 +1,5 @@
 library(optparse)
-
+library(data.table)
 source("utils/log-and-process.r")
 
 
@@ -44,7 +44,23 @@ if(length(cmdoptions$args) > 0) {
 }
 
 print(stanfit_files)
-
+error_log = data.frame(
+    "error"=rep(NULL, length(stanfit_files)),
+    "file"=stanfit_files,
+    stringsAsFactors=F
+)
+i = 0
 for (stanfit_file in stanfit_files) {
-    process_stanfit_file(stanfit_file)
+    i = i+ 1
+    error_log$error[i] = tryCatch({
+      process_stanfit_file(stanfit_file)
+      return(NULL) 
+    }, error = function(e) {
+      message(paste("Processing Error:  ",e))
+      return(paste(e))
+    })
 }
+message("______________________________________________")
+message("________________ERROR_LOG_____________________")
+message("______________________________________________")
+print(error_log)
