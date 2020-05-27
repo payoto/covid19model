@@ -23,7 +23,8 @@ process_covariates_regions <- function(
   N2,
   formula,
   formula_partial,
-  death_thresh_epi_start=10
+  death_thresh_epi_start=10,
+  mobility_processing="none"
 ){
   interventions$Country <- factor(interventions$Country)
   
@@ -105,13 +106,14 @@ process_covariates_regions <- function(
     )
 
     # Padding in mobility data for dates before first time data exists
+    mobility_numeric_fields = list(
+        "grocery.pharmacy", "parks", "residential",
+        "retail.recreation", "transitstations", "workplace"
+      )
     mobility1 <- pad_dates_region_dataframe(
       mobility1, date_field="date", 
       date_start=date_min,
-      col_fill=list(
-        "grocery.pharmacy", "parks", "residential",
-        "retail.recreation", "transitstations", "workplace"
-      ),
+      col_fill=mobility_numeric_fields,
       fill_value=c(0, "extend", "extend")
     )
     
@@ -130,7 +132,11 @@ process_covariates_regions <- function(
     }
     mobility1 = mobility1[order(mobility1$date),]  # ensure date ordering
     mobility1 <- na.locf(mobility1)
-    
+    mobility1 <- preprocess_mobility(
+      mobility1, processing=mobility_processing, 
+      numerical_fields=mobility_numeric_fields
+    )
+
     index = which(region$Cases>0)[1]
     index1 = which(cumsum(region$Deaths)>=death_thresh_epi_start)[1] # also 5
     if (is.na(index1)) {
@@ -348,4 +354,41 @@ remove_negative_deaths <- function (vals) {
     }
   }
   return(vals)
+}
+
+
+preprocess_mobility <- function(
+  data,
+  processing="none",
+  item_field="country",
+  order_field="date",
+  numerical_fields=c()
+){
+
+  # Replaces the names in the mobility data with that of the model
+  item_list <- unique(data[[item_field]])
+  for (item in item_list) {
+
+    item_indexer <- data[[item_field]]==item
+    temp <- data[item_indexer,]
+    temp <- temp[order(temp[[order_field]]),]
+    for (num_f in numerical_fields){
+      temp[[num_f]] <- preprocess_mobility_vector(temp[[num_f]], processing)
+    }
+    data[item_indexer,] <- temp
+  }
+  return(data)
+}
+
+preprocess_mobility_vector <- function (data, processing){
+
+  if (processing=="none"){
+    # does nothing
+  } else if (processing=="rolling_mean"){
+    data = rollmean(data, 7, align="right", fill="extend")
+  } else {
+    data = eval(parse(text=processing))
+  }
+
+  return (data)
 }

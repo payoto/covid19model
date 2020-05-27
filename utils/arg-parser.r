@@ -18,6 +18,8 @@ base_arg_parse <- function (){
 	                     help="Parameter containing the active regions.")
 	parser <- add_option(parser, c("--activecountries"), default="config/active-countries.cfg",
 	                     help="Parameter containing the active countries.")
+	parser <- add_option(parser, c("--mobilityprocessing"), default="none",
+	                     help="Options are:  'none', 'rolling_mean', any user defined: '<your function>(data)'")
 	
 	cmdoptions <- parse_args(parser, args = commandArgs(trailingOnly = TRUE), positional_arguments = TRUE)
 
@@ -65,6 +67,7 @@ base_arg_parse <- function (){
 			activeregions = cmdoptions$options$activeregions,
 			activecountries = cmdoptions$options$activecountries,
 			activezones = cmdoptions$options$activezones,
+			mobilityprocessing = cmdoptions$options$mobilityprocessing,
             std_args
 		)
     message("Configured values are:")

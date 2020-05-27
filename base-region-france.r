@@ -26,6 +26,7 @@ mobility_source <- parsedargs[["mobility_source"]]
 formula_pooling <- parsedargs[["formula_pooling"]]
 formula_partialpooling <- parsedargs[["formula_partialpooling"]]
 zone_definition_file <- parsedargs[["activezones"]]
+mobility_processing <- parsedargs[["mobilityprocessing"]]
 
 run_name <- create_analysis_folder(FULL, DEBUG, StanModel)
 
@@ -69,7 +70,8 @@ processed_data <- process_covariates_regions(
   N2 = N2,
   formula = formula,
   formula_partial = formula_partial,
-  death_thresh_epi_start=death_thresh_epi_start
+  death_thresh_epi_start=death_thresh_epi_start,
+  mobility_processing=mobility_processing
 )
 
 stan_data <- processed_data$stan_data
