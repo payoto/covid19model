@@ -12,6 +12,7 @@ library(zoo)
 library(tidyverse)
 library(magrittr)
 
+source("utils/ifr-tools.r")
 
 process_covariates_regions <- function(
   region_to_country_map,
@@ -67,16 +68,8 @@ process_covariates_regions <- function(
   {
     Country = region_to_country_map[[Region]]
     message(sprintf("Region: %s in country: %s ",Region,Country))
-    if(any(ifr.by.country$country == Region)){
-        # to add
-      IFR <- ifr.by.country$ifr[ifr.by.country$country == Country]
-      region_pop <- ifr.by.country[ifr.by.country$country==Country,]
-    } else {
-        IFR <- ifr.by.country$ifr[ifr.by.country$country == Country]
-        region_pop <- ifr.by.country[ifr.by.country$country==Country,]
-
-    }
-
+    
+    # COVID data processing
     if(!any(d$Country==Region)){
       preprocess_error = TRUE
       message(sprintf(
@@ -84,9 +77,14 @@ process_covariates_regions <- function(
       next
     }
     region <- d[d$Country==Region,]
-    region$DateRep <-region$DateRep
     region <-region[order(as.Date(region$DateRep)),]  # ensure date ordering
     region$Deaths = remove_negative_deaths(region$Deaths)
+
+    # IFR processing
+    IFR = ifr_from_array(ifr.by.country, Country, Region)
+    region_pop = population_from_array(ifr.by.country, region, Country, Region)
+
+    # Mobility processing
     mobility1 <- mobility[mobility$country==Region,]
     if(!any(mobility$country==Region)){
       preprocess_error = TRUE
@@ -147,7 +145,7 @@ process_covariates_regions <- function(
     message(sprintf("\tFirst non-zero cases is on day %d, and 30 days before 10 deaths is day %d",index,index2))
     region=region[index2:nrow(region),]
     stan_data$EpidemicStart = c(stan_data$EpidemicStart,index1+1-index2)
-    stan_data$pop = c(stan_data$pop,region_pop$popt)
+    stan_data$pop = c(stan_data$pop,region_pop)
     
     mobility1 = mobility1[index2:nrow(mobility1),]
 

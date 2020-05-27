@@ -18,7 +18,7 @@ log_simulation_inputs <- function(
     Region = names(region_to_country_map)[i]
     Country = region_to_country_map[[Region]]
     all_countries[i] = Country
-    ifr.by.region[i] =ifr.by.country$ifr[ifr.by.country$country == Country]
+    ifr.by.region[i] = ifr_from_array(ifr.by.country, Country, Region)
   }
   input_table = data.frame(
     "region"=names(region_to_country_map),
@@ -80,7 +80,17 @@ reprocess_simulation <- function (run_name) {
     infection_to_onset <- c("mean"=5.1, "deviation"=0.86)
     onset_to_death <- c("mean"=18.8, "deviation"=0.45)
   }
-  ifr.by.country = return_ifr()
+  ifr_file = paste0("results/", run_name,'-inputs-active_regions_ifr.csv')
+  if (file.exists(ifr_file)){
+    ifr_in = read.csv(ifr_file)
+    ifr.by.country = data.frame(
+      "country"=ifr_in$region,
+      "ifr"=ifr_in$IFR,
+      "popt"=-1
+    )
+  } else {
+    ifr.by.country = return_ifr()
+  }
 
   # Extract info from fit
   extracted_fit = rstan::extract(fit)
