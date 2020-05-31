@@ -1,0 +1,3 @@
+argument, value
+formula_pooling , ~ -1 + residential + transit + grocery + parks + retail + workplace
+formula_partialpooling , ~ -1 + residential + transit + grocery + parks + retail + workplace

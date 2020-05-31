@@ -1,5 +1,5 @@
 library(optparse)
-
+library(tidyverse)
 
 base_arg_parse <- function (){
 	# Commandline options and parsing
@@ -14,12 +14,11 @@ base_arg_parse <- function (){
 	                     help="Consider only data up to max date 'dd/mm/yy' format.")
 	parser <- add_option(parser, c("--activezones"), default="config/covid19model_analysis_zones.csv",
 	                     help="Parameter containing the active countries.")
-	parser <- add_option(parser, c("--activeregions"), default="config/active-regions.cfg",
-	                     help="Parameter containing the active regions.")
-	parser <- add_option(parser, c("--activecountries"), default="config/active-countries.cfg",
-	                     help="Parameter containing the active countries.")
 	parser <- add_option(parser, c("--mobilityprocessing"), default="none",
 	                     help="Options are:  'none', 'rolling_mean', any user defined: '<your function>(data)'")
+	parser <- add_option(parser, c("--argfile"), default="",
+	                     help="define a csv file from which to load arguments (it is not recommended to mix with other command line args)")
+
 	
 	cmdoptions <- parse_args(parser, args = commandArgs(trailingOnly = TRUE), positional_arguments = TRUE)
 
@@ -64,12 +63,18 @@ base_arg_parse <- function (){
 			FULL=FULL,
 			new_sub_folder=new_sub_folder ,
 			max_date = cmdoptions$options$maxdate,
-			activeregions = cmdoptions$options$activeregions,
-			activecountries = cmdoptions$options$activecountries,
 			activezones = cmdoptions$options$activezones,
 			mobilityprocessing = cmdoptions$options$mobilityprocessing,
             std_args
 		)
+
+	if(!is.null(cmdoptions$options$argfile) && cmdoptions$options$argfile != "") {
+		file_csv_args = read.csv(cmdoptions$options$argfile)
+	 	for (i in 1:(dim(file_csv_args)[1])){
+	 		parsedargs[[str_trim(file_csv_args[i, 1])]] <- file_csv_args[i,2]
+	 	}
+	}
+
     message("Configured values are:")
     for (i in 1:length(parsedargs)){
         message(sprintf("\t%s : %s",names(parsedargs)[i], parsedargs[i]))
