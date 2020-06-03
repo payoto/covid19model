@@ -52,13 +52,16 @@ error_log = data.frame(
 i = 0
 for (stanfit_file in stanfit_files) {
     i = i+ 1
-    error_log$error[i] = tryCatch({
+    err_mark = tryCatch({
       process_stanfit_file(stanfit_file)
-      return("") 
+      
     }, error = function(e) {
       message(paste("Processing Error:  ",e))
       return(paste(e))
     })
+    if (!is.null(err_mark)){
+      error_log$error[i] = err_mark
+    }
 }
 message("______________________________________________")
 message("________________ERROR_LOG_____________________")

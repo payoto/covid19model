@@ -57,12 +57,12 @@ prepare_mobility_effects <- function (out, formula_pooling, formula_partialpooli
     colnames(alpha_partial) <- zone_labels
     data_partial <- bayesplot::mcmc_intervals_data(alpha_partial,prob=.95,transformation=function(x) 1-exp(-x),point_est="mean")
     data_partial$type <- "partial"
-    data <- rbind(data_global,data_partial)
+    data_global <- rbind(data_global,data_partial)
   }
 
   plot_labels <- c(plot_labels, plot_labels_partial)
-  print(plot_labels)  
-  return (list(data=data, plot_labels=plot_labels))
+  # print(plot_labels)  
+  return (list(data=data_global, plot_labels=plot_labels))
 
 }
 
@@ -129,4 +129,4 @@ plot_covariate_effects <- function (data, plot_labels, filename) {
   
 }
 
-# select_covariate_effects()
+select_covariate_effects()
