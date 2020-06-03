@@ -45,7 +45,7 @@ if(length(cmdoptions$args) > 0) {
 
 print(stanfit_files)
 error_log = data.frame(
-    "error"=rep(NULL, length(stanfit_files)),
+    "error"=rep("", length(stanfit_files)),
     "file"=stanfit_files,
     stringsAsFactors=F
 )
@@ -54,7 +54,7 @@ for (stanfit_file in stanfit_files) {
     i = i+ 1
     error_log$error[i] = tryCatch({
       process_stanfit_file(stanfit_file)
-      return(NULL) 
+      return("") 
     }, error = function(e) {
       message(paste("Processing Error:  ",e))
       return(paste(e))
